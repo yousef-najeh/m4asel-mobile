@@ -35,3 +35,6 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+
+// Default export for Expo Router (to prevent route warning)
+export default AuthProvider;

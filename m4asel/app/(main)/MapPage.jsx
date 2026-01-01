@@ -1,190 +1,163 @@
-import React, { useRef, useState } from "react";
-import {
-    StyleSheet,
-    View,
-    Dimensions,
-    FlatList,
-    } from "react-native";
-    import MapView, { Marker } from "react-native-maps";
-    import MapCard from "../Components/MapCard";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, FlatList, Dimensions } from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import MapCard from "../Components/MapCard";
+import * as Location from "expo-location";
 
-    const { width: WINDOW_WIDTH } = Dimensions.get("window");
-    const CARD_WIDTH = WINDOW_WIDTH * 0.8;
-    const SPACING_FOR_CARD = (WINDOW_WIDTH - CARD_WIDTH) / 2; 
+const { width: WINDOW_WIDTH } = Dimensions.get("window");
+const CARD_WIDTH = WINDOW_WIDTH * 0.8;
+const SPACING = 12;
+const SNAP_INTERVAL = CARD_WIDTH + SPACING;
 
-    const MapPage = () => {
-    const mapRef = useRef(null);
-    const flatListRef = useRef(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
+const MapPage = () => {
+  const mapRef = useRef(null);
+  const flatListRef = useRef(null);
+  const [locations, setLocations] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-    // welcome -> can pass-> but cant book (also map appears)
-    // version manager (on front end) if app version is less that newest->update(force update)
-    
+  const focusOnMarker = (item) => {
+    if (!item || !mapRef.current) return;
+    setSelectedMarker(item.id);
+    mapRef.current.animateToRegion({
+      latitude: item.latitude - 0.002,
+      longitude: item.longitude,
+      latitudeDelta: 0.009,
+      longitudeDelta: 0.009,
+    }, 500);
+  };
 
-    const moveMapToLocation = (index) => {
-        const location = locations[index]?.coordinate;
-        if (!location) return;
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems.length > 0 && viewableItems[0].isViewable) {
+      const item = viewableItems[0].item;
+      focusOnMarker(item);
+    }
+  }).current;
 
-        mapRef.current?.animateToRegion(
-        {
-            ...location,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-        },
-        1000
-        );
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  useEffect(() => {
+    const fetchWashers = async () => {
+      try {
+        // Get location permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+
+        // Get user location
+        const location = await Location.getCurrentPositionAsync();
+        const { latitude, longitude } = location.coords;
+        setUserLocation({ latitude, longitude });
+
+        // Center map on user location
+        if (mapRef.current) {
+          mapRef.current.animateToRegion({
+            latitude,
+            longitude,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }, 1000);
+        }
+
+        // Fetch washers
+        const url = `${apiUrl}/washers?lat=${latitude}&lng=${longitude}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const washers = Array.isArray(data) ? data : (data.results || data.washers || []);
+        setLocations(washers);
+
+        // Select and zoom to first washer
+        if (washers.length > 0 && mapRef.current) {
+          const firstWasher = washers[0];
+          setSelectedMarker(firstWasher.id);
+          mapRef.current.animateToRegion({
+            latitude: firstWasher.latitude - 0.002,
+            longitude: firstWasher.longitude,
+            latitudeDelta: 0.009,
+            longitudeDelta: 0.009,
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
     };
 
-    const onScrollEnd = (e) => {
-        const contentOffset = e.nativeEvent.contentOffset.x;
-        const index = Math.round(contentOffset / CARD_WIDTH);
-        setCurrentIndex(index);
-        moveMapToLocation(index);
-    };
+    fetchWashers();
+  }, [apiUrl]);
 
-    const scrollToIndex = (index) => {
-        flatListRef.current?.scrollToIndex({ index, animated: true });
-        setCurrentIndex(index);
-        moveMapToLocation(index);
-    };
+  const initialRegion = {
+    latitude: userLocation?.latitude || 24.7136,
+    longitude: userLocation?.longitude || 46.6753,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  };
 
-    return (
-        <View style={styles.container}>
-        {/* MAP */}
-        <MapView
-            ref={mapRef}
-            style={styles.map}
-            initialRegion={{
-                latitude: locations[0].coordinate.latitude,
-                longitude: locations[0].coordinate.longitude,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-            }}
-        >
-            {locations.map((loc, index) => (
-            <Marker
-                key={loc.id}
-                coordinate={loc.coordinate}
-                onPress={() => scrollToIndex(index)}
-            />
-            ))}
-        </MapView>
+  return (
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={initialRegion}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        mapType="mutedStandard"
+        userInterfaceStyle="light"
+      >
+        {locations.map((loc) => (
+          <Marker
+            key={loc.id}
+            coordinate={{ latitude: loc.latitude, longitude: loc.longitude }}
+            pinColor={selectedMarker === loc.id ? "#007AFF" : "#FF3B30"}
+            
+          />
+        ))}
+      </MapView>
 
-        {/* CENTERED CAROUSEL */}
-        <View style={styles.carouselContainer}>
-            <FlatList
-            ref={flatListRef}
-            data={locations}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            pagingEnabled={true} // We'll control snapping manually via snapToInterval
-            snapToInterval={CARD_WIDTH}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            bounces={false}
-            contentContainerStyle={{
-                paddingHorizontal: SPACING_FOR_CARD-10, // This is the key!
-            }}
-            onMomentumScrollEnd={onScrollEnd}
-            getItemLayout={(data, index) => ({
-                length: CARD_WIDTH,
-                offset: CARD_WIDTH * index,
-                index,
-            })}
-            renderItem={({ item }) => (
-                    <MapCard item={item} />
-            )}
-            />
-        </View>
-        </View>
-    );
-    };
+      <View style={styles.cardsContainer}>
+        <FlatList
+          ref={flatListRef}
+          data={locations}
+          horizontal
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <MapCard item={item} />}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          pagingEnabled={false}
+          snapToInterval={SNAP_INTERVAL}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          showsHorizontalScrollIndicator={false}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+        />
+      </View>
+    </View>
+  );
+};
 
-    const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    map: {
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-    carouselContainer: {
-        position: "absolute",
-        bottom: 110,
-        left: 0,
-        right: 0,
-        alignItems: "center",
-    },
-    card: {
-        width: CARD_WIDTH,
-        padding: 24,
-        backgroundColor: "white",
-        borderRadius: 20,
-        elevation: 10,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-        textAlign: "center",
-    },
-    cardTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#222",
-        marginBottom: 8,
-        textAlign: "right",
-    },
-    cardDescription: {
-        fontSize: 16,
-        color: "#666",
-        textAlign: "right",
-    },
-    });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  cardsContainer: {
+    position: "absolute",
+    bottom: 110,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+  },
+  listContent: {
+    paddingHorizontal: 8,
+  },
+  separator: {
+    width: 12,
+  },
+});
 
-    const locations = [
-        {
-        id: "1",
-        name: "مغسلة الاستقلال",
-        rating: 4.5,
-        available_within:"2 :30",
-        services: ["خارجي", "داخلي", "خارجي وداخلي"],
-        location : "جمب السنسلة",
-        coordinate: { latitude: 40.7128, longitude: -74.006 },
-        },
-        {
-        id: "2",
-        title: "Los Angeles",
-        description: "City of Angels",
-        coordinate: { latitude: 34.0522, longitude: -118.2437 },
-        },
-        {
-        id: "3",
-        title: "London",
-        description: "Capital of England",
-        coordinate: { latitude: 51.5074, longitude: -0.1278 },
-        },
-        {
-        id: "4",
-        title: "London",
-        description: "Capital of England",
-        coordinate: { latitude: 51.5074, longitude: -0.1278 },
-        },
-        {
-        id: "5",
-        title: "London",
-        description: "Capital of England",
-        coordinate: { latitude: 51.5074, longitude: -0.1278 },
-        },
-        {
-        id: "6س",
-        title: "London",
-        description: "Capital of England",
-        coordinate: { latitude: 51.5074, longitude: -0.1278 },
-        },
-    ];
-
-    export default MapPage; 
+export default MapPage;

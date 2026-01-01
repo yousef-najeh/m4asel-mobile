@@ -1,6 +1,5 @@
-// app/(auth)/_layout.jsx   ← this runs BEFORE any auth screen opens
-import { Stack } from "expo-router";
-import { Redirect } from "expo-router";
+
+import { Redirect,Stack } from "expo-router";
 import { useAuth } from "../Context/AuthContext";   // adjust path if needed
 
 export default function AuthLayout() {

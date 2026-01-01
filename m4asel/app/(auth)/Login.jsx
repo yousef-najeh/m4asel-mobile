@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable, StyleSheet, TextInput} from 'react-native';
 import { View,Text,TouchableOpacity,Image } from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Checkbox } from '@futurejj/react-native-checkbox';
 import { router } from 'expo-router';
@@ -34,7 +34,6 @@ const Login = () => {
         };
 
     return (
-    <SafeAreaProvider style={styles.safeAreaProviderContainer}> 
         <SafeAreaView style={styles.safeAreaContainer}>
         <Text style={styles.pageHeader}>Log in </Text>
         <Formik
@@ -139,7 +138,6 @@ const Login = () => {
             </Pressable>
         
         </SafeAreaView>
-    </SafeAreaProvider>
   );
 };
 
@@ -150,10 +148,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         margin: 20,
         alignSelf: 'center',
-    },
-    safeAreaProviderContainer: {
-        flex: 1,
-        backgroundColor: '#ffffff',
     },
     safeAreaContainer: {
         flex: .8,

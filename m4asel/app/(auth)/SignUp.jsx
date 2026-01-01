@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable, StyleSheet, TextInput} from 'react-native';
 import { View,Text,TouchableOpacity,Image } from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { fetch } from 'expo/fetch';
@@ -61,8 +61,7 @@ const SignUp = async () => {
 
 
     return (
-        <SafeAreaProvider style={styles.safeAreaProviderContainer}>
-            <SafeAreaView style={styles.safeAreaContainer}>
+        <SafeAreaView style={styles.safeAreaContainer}>
                 <Text style={styles.pageHeader}>Sign Up</Text>
                 
                 <TextInput
@@ -162,8 +161,7 @@ const SignUp = async () => {
                 <Text style={{color: '#2196F3', fontWeight: 'bold',fontSize: 20}}>Log in </Text>
             </Pressable>
 
-            </SafeAreaView>
-        </SafeAreaProvider>
+        </SafeAreaView>
     );
 }
 
@@ -176,10 +174,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         margin: 20,
         alignSelf: 'center',
-    },
-    safeAreaProviderContainer: {
-        flex: 1,
-        backgroundColor: '#ffffff',
     },
     safeAreaContainer: {
         flex: .8,
