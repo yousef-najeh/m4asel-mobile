@@ -4,143 +4,299 @@ import {
     StyleSheet,
     Pressable,
     View,
-    TouchableOpacity
+    TouchableOpacity,
+    ScrollView
 } from "react-native";
 import { router } from 'expo-router';
-import { Rating, AirbnbRating } from 'react-native-elements';
 import { Icon } from 'react-native-elements';
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
-    const CARD_WIDTH = WINDOW_WIDTH * 0.8;
+const CARD_WIDTH = WINDOW_WIDTH * 0.8;
+
+// Helper function to format time from ISO string
+const formatTime = (isoString) => {
+    if (!isoString) return "غير متاح";
+    try {
+        const date = new Date(isoString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    } catch (e) {
+        return "غير متاح";
+    }
+};
+
+// Helper function to format distance
+const formatDistance = (distanceKm) => {
+    if (distanceKm === 0 || !distanceKm) return "0";
+    if (distanceKm < 1) {
+        return (distanceKm * 1000).toFixed(0) + " م";
+    }
+    return distanceKm.toFixed(1) + " كم";
+};
 
 function MapCard({item}) {
+    const nextAvailableTime = formatTime(item.next_available_time);
+    const arrivalTime = formatTime(item.arrival_time);
+    const distance = formatDistance(item.distance_km);
+
     return ( 
         <Pressable 
             style={styles.card}
             onPress={() => router.push('/Login')}
         >
-        <Text style={styles.cardTitle}>{item.name} </Text>
-        <View>
-            <View style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
-                <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent:"flex-end"   
-                        }}>
-                    <Icon
-                        name="star"
-                        type="font-awesome"
-                        color="#FFD700"
-                        size={22}
-                    />
-                    <Text style={{ fontSize: 18, color: "#222", marginLeft: 6 }}>
-                        {item.rating} 
-                    </Text>
+            {/* Header Section */}
+            <View style={styles.header}>
+                <View style={styles.titleSection}>
+                    <Text style={styles.cardTitle}>{item.display_name}</Text>
+                    <View style={styles.distanceBadge}>
+                        <Icon
+                            name="location-on"
+                            type="material"
+                            color="#007AFF"
+                            size={12}
+                        />
+                        <Text style={styles.distanceText}>{distance}</Text>
+                    </View>
                 </View>
+            </View>
 
-                <View
-                    style={{
-                    width: 1,
-                    height: 18,      // same height as text
-                    backgroundColor: "#888",
-                    marginHorizontal: 8,
-                    }}
-                />
-                <Text style={{ fontSize: 18, color: "#666", textAlign: "right", marginTop: 4 }}>
-                كم  1.2  
-                </Text> 
-            </View>
-            <View style={{ flexDirection: "row", 
-                            alignItems: "center", 
-                            marginTop: 8, 
-                            justifyContent:"flex-end",
-                            gap: 6 
-                        }}>
-                <Text style={styles.cardLocation}>{item.location}</Text>
+            {/* Address Section */}
+            <View style={styles.infoRow}>
                 <Icon
-                    name="map-marker"      // name of the location icon
-                    type="font-awesome"     // from FontAwesome
-                    color="#888"            // gray color like your screenshot
-                    size={18}               // adjust size to match text
+                    name="map-marker"
+                    type="font-awesome"
+                    color="#8E8E93"
+                    size={14}
                 />
+                <Text style={styles.infoText} numberOfLines={2}>{item.address}</Text>
             </View>
-            <View style={{ flexDirection: "row", 
-                            alignItems: "center", 
-                            marginTop: 8,
-                            justifyContent:"flex-end",
-                            gap: 6 
-                        }}>
-                <Text style={{ fontSize: 16, color: "#666", textAlign: "right", marginTop: 4 }}>
-                        اقرب وقت اليوم 2:30
-                </Text> 
-                <Icon
-                    name="clock-o"      // name of the clock icon
-                    type="font-awesome" // from FontAwesome
-                    color="#888"        // gray color
-                    size={18}           // adjust size to match text
-                />
-                
-            </View>
-            <View>
-                <View style={{ marginTop: 8 }}>
-                    <Text style={{ fontSize: 18, fontWeight: "bold", color: "#222", marginBottom: 4, textAlign: "right" }}>
-                        الخدمات المتوفرة:
-                    </Text>
-                    <Text style={{ fontSize: 16, color: "#666", textAlign: "right" }}>
-                        {Array.isArray(item.services) ? item.services.join(", ") : "لا توجد خدمات"}
-                    </Text>
+
+            {/* Time Section - Primary Focus on Arrival */}
+            <View style={styles.timeSection}>
+                <View style={styles.primaryTimeRow}>
+                    <View style={styles.primaryTimeContent}>
+                        <Text style={styles.primaryTimeLabel}>يصل في</Text>
+                        <Text style={styles.primaryTimeValue}>{arrivalTime}</Text>
+                    </View>
+                    <View style={styles.timeIcon}>
+                        <Icon
+                            name="schedule"
+                            type="material"
+                            color="#FFFFFF"
+                            size={24}
+                        />
+                    </View>
                 </View>
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: "#007AFF",
-                        paddingVertical: 14,
-                        borderRadius: 12,
-                        marginTop: 16,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: "100%",
-                    }}
-                    onPress={() => console.log("Book Now pressed")}
-                    >
-                    <Text style={{ color: "white", fontSize: 18, fontWeight: "600" }}>
-                        احجز الان
-                    </Text>
-                </TouchableOpacity>
+                {item.next_available_time && (
+                    <View style={styles.secondaryTimeInfo}>
+                        <Icon
+                            name="info"
+                            type="material"
+                            color="#FFFFFF"
+                            size={12}
+                        />
+                        <Text style={styles.secondaryTimeText}>
+                            متاح من {nextAvailableTime} • {distance} بعيد
+                        </Text>
+                    </View>
+                )}
             </View>
 
-        </View>
+            {/* Services Section */}
+            {Array.isArray(item.services) && item.services.length > 0 && (
+                <View style={styles.servicesSection}>
+                    <Text style={styles.sectionTitle}>الخدمات المتوفرة</Text>
+                    <View style={styles.servicesContainer}>
+                        {item.services.map((service, index) => (
+                            <View key={index} style={styles.serviceChip}>
+                                <Text style={styles.serviceText}>{service}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
+            )}
 
+            {/* Book Button */}
+            <TouchableOpacity
+                style={styles.bookButton}
+                onPress={() => console.log("Book Now pressed", item.id)}
+                activeOpacity={0.8}
+            >
+                <Text style={styles.bookButtonText}>احجز الآن</Text>
+                <Icon
+                    name="arrow-left"
+                    type="font-awesome"
+                    color="#FFFFFF"
+                    size={14}
+                />
+            </TouchableOpacity>
         </Pressable>
     );
 }
 
 const styles = StyleSheet.create({
-card: {
+    card: {
         width: CARD_WIDTH,
-        padding: 24,
-        backgroundColor: "white",
-        borderRadius: 20,
-        elevation: 10,
+        padding: 16,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 24,
+        marginHorizontal: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-        textAlign: "center",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: "#F0F0F0",
+    },
+    header: {
+        marginBottom: 10,
+    },
+    titleSection: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: 6,
     },
     cardTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#222",
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#1D1D1F",
+        flex: 1,
+        textAlign: "right",
+        marginRight: 6,
+    },
+    distanceBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F0F7FF",
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+        gap: 3,
+    },
+    distanceText: {
+        fontSize: 12,
+        fontWeight: "600",
+        color: "#007AFF",
+    },
+    infoRow: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        marginBottom: 10,
+        gap: 6,
+    },
+    infoText: {
+        flex: 1,
+        fontSize: 14,
+        color: "#8E8E93",
+        textAlign: "right",
+        lineHeight: 20,
+    },
+    timeSection: {
+        backgroundColor: "#007AFF",
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 12,
+        shadowColor: "#007AFF",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    primaryTimeRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 8,
+    },
+    primaryTimeContent: {
+        flex: 1,
+    },
+    primaryTimeLabel: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.85)",
+        marginBottom: 2,
+        textAlign: "right",
+    },
+    primaryTimeValue: {
+        fontSize: 28,
+        fontWeight: "800",
+        color: "#FFFFFF",
+        textAlign: "right",
+        letterSpacing: 0.5,
+    },
+    timeIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    secondaryTimeInfo: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(255, 255, 255, 0.2)",
+    },
+    secondaryTimeText: {
+        fontSize: 12,
+        color: "rgba(255, 255, 255, 0.8)",
+        textAlign: "right",
+        flex: 1,
+    },
+    servicesSection: {
+        marginBottom: 10,
+    },
+    sectionTitle: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: "#1D1D1F",
         marginBottom: 8,
         textAlign: "right",
     },
-    cardLocation: {
-
+    servicesContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 6,
+        justifyContent: "flex-end",
+    },
+    serviceChip: {
+        backgroundColor: "#F0F0F0",
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 16,
+    },
+    serviceText: {
+        fontSize: 12,
+        fontWeight: "500",
+        color: "#1D1D1F",
+    },
+    bookButton: {
+        backgroundColor: "#34C759",
+        paddingVertical: 14,
+        borderRadius: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        shadowColor: "#34C759",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    bookButtonText: {
+        color: "#FFFFFF",
         fontSize: 16,
-        color: "#666",
-        textAlign: "right",
+        fontWeight: "700",
+        letterSpacing: 0.3,
     },
 });
 
-
-export default MapCard;
+export default MapCard

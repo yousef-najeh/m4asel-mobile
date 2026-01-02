@@ -6,7 +6,7 @@ import { auth } from "../../util/fireBaseConfig";
 
 export const AuthContext = createContext();
 
-// 2. Custom hook — THIS IS WHAT WAS MISSING
+// Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -14,24 +14,84 @@ export const useAuth = () => {
   }
   return context;
 };
+const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-// 3. Provider component
+// Provider component
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch profile data from API
+    const fetchProfile = async (firebaseUser) => {
+        try {
+            const token = await firebaseUser.getIdToken();
+            const response = await fetch(`${apiUrl}/users/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch profile: ${response.status}`);
+            }
+
+            const profileData = await response.json();
+            setProfile(profileData);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+            setError(err.message);
+            setProfile(null);
+        }
+    };
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (usr) => {
-        setUser(usr);
-        setLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setUser(firebaseUser);
+            
+            if (firebaseUser) {
+                await fetchProfile(firebaseUser);
+            } else {
+                setProfile(null);
+                setError(null);
+            }
+            
+            setLoading(false);
         });
 
         return () => unsubscribe();
     }, []);
 
+    // Helper to refresh profile data
+    const refreshProfile = async () => {
+        if (user) {
+            setLoading(true);
+            await fetchProfile(user);
+            setLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading }}>
-        {children}
+        <AuthContext.Provider 
+            value={{ 
+                user, 
+                profile, 
+                loading, 
+                error,
+                refreshProfile,
+                isAuthenticated: !!user,
+                role: profile?.user_role,
+                washerProfile: profile?.washer_profile,
+            }}
+        >
+            {children}
         </AuthContext.Provider>
     );
 };
+
+// Default export for Expo Router (to prevent route warning)
+export default AuthProvider;

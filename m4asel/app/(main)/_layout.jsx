@@ -3,14 +3,15 @@
 import {router, Stack, Tabs} from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Pressable, Text, View, StyleSheet } from "react-native";
+import { Icon } from 'react-native-elements';
 
 export default function MainLayout() {
   return (
     <>
-      <StatusBar style="light" backgroundColor="transparent" translucent />
+      <StatusBar style="dark" backgroundColor="transparent" translucent />
 
       <Tabs
-        screenOptions={{ headerShown: true }}
+        screenOptions={{ headerShown: false }}
         tabBar={({ state }) => {
           const currentRoute = state.routes[state.index].name;
 
@@ -18,39 +19,72 @@ export default function MainLayout() {
             <View style={styles.container}>
               <View style={styles.bottomBar}>
                 <Pressable
-                  onPress={() => router.replace("/(main)/History")}
-                  style={[
-                    styles.tabButton,
-                    currentRoute === "History" && styles.activeTab,
-                  ]}
+                  onPress={() => router.replace("/(main)/ProfilePage")}
+                  style={styles.tabButton}
                 >
-                  <Text style={[styles.tabText, currentRoute === "History" && styles.activeText]}>
-                    السجل
-                  </Text>
+                  <View style={[
+                    styles.tabContent,
+                    currentRoute === "ProfilePage" && styles.activeTabContent
+                  ]}>
+                    <Icon
+                      name="person"
+                      type="material"
+                      size={24}
+                      color={currentRoute === "ProfilePage" ? "#FFFFFF" : "#6B7280"}
+                    />
+                    <Text style={[
+                      styles.tabText,
+                      currentRoute === "ProfilePage" && styles.activeText
+                    ]}>
+                      حسابك
+                    </Text>
+                  </View>
                 </Pressable>
 
                 <Pressable
                   onPress={() => router.replace("/(main)/MapPage")}
-                  style={[
-                    styles.tabButton,
-                    currentRoute === "MapPage" && styles.activeTab,
-                  ]}
+                  style={styles.tabButton}
                 >
-                  <Text style={[styles.tabText, currentRoute === "MapPage" && styles.activeText]}>
-                    الخريطة
-                  </Text>
+                  <View style={[
+                    styles.tabContent,
+                    currentRoute === "MapPage" && styles.activeTabContent
+                  ]}>
+                    <Icon
+                      name="map"
+                      type="material"
+                      size={24}
+                      color={currentRoute === "MapPage" ? "#FFFFFF" : "#6B7280"}
+                    />
+                    <Text style={[
+                      styles.tabText,
+                      currentRoute === "MapPage" && styles.activeText
+                    ]}>
+                      الخريطة
+                    </Text>
+                  </View>
                 </Pressable>
 
                 <Pressable
-                  onPress={() => router.replace("/(main)/ProfilePage")}
-                  style={[
-                    styles.tabButton,
-                    currentRoute === "ProfilePage" && styles.activeTab,
-                  ]}
+                  onPress={() => router.replace("/(main)/History")}
+                  style={styles.tabButton}
                 >
-                  <Text style={[styles.tabText, currentRoute === "ProfilePage" && styles.activeText]}>
-                    الملف الشخصي
-                  </Text>
+                  <View style={[
+                    styles.tabContent,
+                    currentRoute === "History" && styles.activeTabContent
+                  ]}>
+                    <Icon
+                      name="history"
+                      type="material"
+                      size={24}
+                      color={currentRoute === "History" ? "#FFFFFF" : "#6B7280"}
+                    />
+                    <Text style={[
+                      styles.tabText,
+                      currentRoute === "History" && styles.activeText
+                    ]}>
+                      السجل
+                    </Text>
+                  </View>
                 </Pressable>
               </View>
             </View>
@@ -58,7 +92,7 @@ export default function MainLayout() {
         }}
       >
         <Tabs.Screen name="History" options={{ tabBarButton: () => null }} />
-        <Tabs.Screen name="MapPage" options={{ title: "الخريطة", tabBarButton: () => null }} />
+        <Tabs.Screen name="MapPage" options={{tabBarButton: () => null }} />
         <Tabs.Screen name="ProfilePage" options={{ tabBarButton: () => null }} />
       </Tabs>
     </>
@@ -70,47 +104,62 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 30, 
+    paddingBottom: 20,
+    paddingHorizontal: 16,
     pointerEvents: "box-none",
   },
 
   bottomBar: {
-    width: "85%",                   
+    width: "100%",
     maxWidth: 420,
-    height: 70,
-    backgroundColor: "#90CAF9", 
+    backgroundColor: "#FFFFFF",
     flexDirection: "row",
-    borderRadius: 35,                
-    overflow: "hidden",
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
 
   tabButton: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "transparent",
   },
 
-  activeTab: {
-    backgroundColor: "#BBDEFB",     
-    borderRadius: 30,
-    marginHorizontal: 6,
-    marginVertical: 6,
+  tabContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    minWidth: 70,
+    gap: 4,
+  },
+
+  activeTabContent: {
+    backgroundColor: "#007AFF",
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   tabText: {
-    color: "#666",
-    fontSize: 15,
+    color: "#6B7280",
+    fontSize: 11,
     fontWeight: "600",
+    marginTop: 2,
   },
 
   activeText: {
-    color: "blue",               
-    fontWeight: "800",
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 });
