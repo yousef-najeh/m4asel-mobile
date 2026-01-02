@@ -120,7 +120,7 @@ function MapCard({item}) {
             {/* Book Button */}
             <TouchableOpacity
                 style={styles.bookButton}
-                onPress={() => console.log("Book Now pressed", item.id)}
+                onPress={() => router.push(`/(main)/BookingPage?washerId=${item.id}`)}
                 activeOpacity={0.8}
             >
                 <Text style={styles.bookButtonText}>احجز الآن</Text>
