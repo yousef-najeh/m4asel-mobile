@@ -4,16 +4,17 @@ import {
     StyleSheet,
     Pressable,
     View,
-    TouchableOpacity,
-    ScrollView
+    TouchableOpacity
 } from "react-native";
 import { router } from 'expo-router';
 import { Icon } from 'react-native-elements';
+import { useState, useEffect } from 'react';
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = WINDOW_WIDTH * 0.8;
 
-// Helper function to format time from ISO string
+const MINUTE_MS_IN_MS = 60000;
+
 const formatTime = (isoString) => {
     if (!isoString) return "غير متاح";
     try {
@@ -36,8 +37,39 @@ const formatDistance = (distanceKm) => {
 };
 
 function MapCard({item}) {
-    const nextAvailableTime = formatTime(item.next_available_time);
-    const arrivalTime = formatTime(item.arrival_time);
+    const [minutesElapsed, setMinutesElapsed] = useState(0);
+    
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setMinutesElapsed(prev => prev + 1);
+        }, MINUTE_MS_IN_MS);
+        return () => clearInterval(interval);
+    }, []);
+    
+    // Add elapsed minutes to next available time
+    const getNextAvailableTime = () => {
+        if (!item.next_available_time) return "غير متاح";
+        try {
+            const nextTime = new Date(item.next_available_time);
+            nextTime.setMinutes(nextTime.getMinutes() + minutesElapsed);
+            return formatTime(nextTime.toISOString());
+        } catch (e) {
+            return "غير متاح";
+        }
+    };
+    const getNextArrivalTime = () => {
+        if (!item.arrival_time) return "غير متاح";
+        try {
+            const arrivalTime = new Date(item.arrival_time);
+            arrivalTime.setMinutes(arrivalTime.getMinutes() + minutesElapsed);
+            return formatTime(arrivalTime.toISOString());
+        } catch (e) {
+            return "غير متاح";
+        }
+    };
+    
+    const nextAvailableTime = getNextAvailableTime();
+    const arrivalTime = getNextArrivalTime();
     const distance = formatDistance(item.distance_km);
 
     return ( 

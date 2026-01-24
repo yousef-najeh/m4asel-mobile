@@ -1,21 +1,18 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from 'react-native-elements';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../Context/AuthContext';
-import { UserRole } from '../../constants/UserRole';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-function History() {
-    const { user, role } = useAuth();
+function Bookings() {
+    const { user } = useAuth();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
-
-    // Fetch bookings from API
+    // Fetch active bookings (pending and in_progress) from API
     const fetchBookings = async () => {
         try {
             setLoading(true);
@@ -33,8 +30,11 @@ function History() {
             }
             
             const data = await response.json();
-            // Response is an array directly
-            setBookings(Array.isArray(data) ? data : []);
+            // Filter to show only pending and in_progress bookings
+            const activeBookings = Array.isArray(data) 
+                ? data.filter(b => b.status === 'pending' || b.status === 'in_progress')
+                : [];
+            setBookings(activeBookings);
         } catch (error) {
             console.error('Error fetching bookings:', error);
             setBookings([]);
@@ -53,13 +53,68 @@ function History() {
         fetchBookings();
     }, []);
 
+    // Update booking status
+    const updateBookingStatus = async (bookingId, newStatus, cancelReason = null) => {
+        try {
+            const token = await user.getIdToken();
+            const body = { status: newStatus };
+            if (cancelReason) {
+                body.cancel_reason = cancelReason;
+            }
+            
+            const response = await fetch(`${apiUrl}/bookings/${bookingId}/status`, {
+                method: 'PATCH',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to update booking: ${response.status}`);
+            }
+            
+            // Refresh bookings after update
+            await fetchBookings();
+        } catch (error) {
+            console.error('Error updating booking:', error);
+            Alert.alert('خطأ', 'فشل تحديث حالة الحجز');
+        }
+    };
+
+    // Handle cancel with reason
+    const handleCancelBooking = (bookingId) => {
+        Alert.alert(
+            'رفض الحجز',
+            'يرجى اختيار سبب الرفض:',
+            [
+                {
+                    text: 'مشغول في هذا الوقت',
+                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'مشغول في هذا الوقت')
+                },
+                {
+                    text: 'لا يمكنني تقديم هذه الخدمة',
+                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'لا يمكنني تقديم هذه الخدمة')
+                },
+                {
+                    text: 'سبب آخر',
+                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'تم الرفض من قبل المغسلة')
+                },
+                {
+                    text: 'إلغاء',
+                    style: 'cancel'
+                }
+            ]
+        );
+    };
+
     // Format date and time
     const formatDateTime = (isoString) => {
         if (!isoString) return { date: "---", time: "---" };
         try {
             const date = new Date(isoString);
             
-            // Format date in readable Arabic format
             const monthNames = [
                 "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
                 "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
@@ -70,7 +125,6 @@ function History() {
             const year = date.getFullYear();
             const dateStr = `${day} ${month} ${year}`;
             
-            // Format time in 12-hour format with AM/PM
             let hours = date.getHours();
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
@@ -83,43 +137,11 @@ function History() {
         }
     };
 
-    // Status config
-    const statusConfig = {
-        pending: {
-            label: "قيد الانتظار",
-            bg: "#FEF3C7",
-            text: "#92400E",
-            border: "#FCD34D",
-            icon: "schedule",
-        },
-        confirmed: {
-            label: "مؤكد",
-            bg: "#DBEAFE",
-            text: "#1E40AF",
-            border: "#93C5FD",
-            icon: "check-circle",
-        },
-        completed: {
-            label: "مكتمل",
-            bg: "#D1FAE5",
-            text: "#065F46",
-            border: "#6EE7B7",
-            icon: "check-circle",
-        },
-        cancelled: {
-            label: "ملغي",
-            bg: "#FEE2E2",
-            text: "#991B1B",
-            border: "#FCA5A5",
-            icon: "cancel",
-        },
-    };
-
     if (loading) {
         return (
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <View style={styles.loadingContainer}>
-                    <Icon name="history" type="material" size={48} color="#D1D5DB" />
+                    <Icon name="event-note" type="material" size={48} color="#D1D5DB" />
                     <Text style={styles.loadingText}>جارٍ التحميل...</Text>
                 </View>
             </SafeAreaView>
@@ -138,8 +160,8 @@ function History() {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerContent}>
-                        <Icon name="history" type="material" size={28} color="#111827" />
-                        <Text style={styles.headerTitle}>سجل الحجوزات</Text>
+                        <Icon name="event-note" type="material" size={28} color="#111827" />
+                        <Text style={styles.headerTitle}>الحجوزات النشطة</Text>
                     </View>
                     <View style={styles.bookingCount}>
                         <Text style={styles.bookingCountText}>{bookings.length}</Text>
@@ -149,62 +171,45 @@ function History() {
                 {/* Bookings List */}
                 {bookings.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Icon name="event-busy" type="material" size={64} color="#D1D5DB" />
-                        <Text style={styles.emptyTitle}>لا توجد حجوزات</Text>
-                        <Text style={styles.emptyText}>ليس لديك أي حجوزات حتى الآن</Text>
+                        <Icon name="event-available" type="material" size={64} color="#D1D5DB" />
+                        <Text style={styles.emptyTitle}>لا توجد حجوزات نشطة</Text>
+                        <Text style={styles.emptyText}>جميع الحجوزات قد تم إكمالها</Text>
                     </View>
                 ) : (
                     bookings.map((booking) => {
                         const { date, time } = formatDateTime(booking.scheduled_time);
-                        const status = statusConfig[booking.status] || statusConfig.pending;
-                        
-                        // Get appropriate info based on user role
-                        const displayName = isWasher 
-                            ? booking.user_profile?.name 
-                            : booking.wash_service?.washer_profile?.display_name;
-                        const displayAddress = isWasher 
-                            ? null 
-                            : booking.wash_service?.washer_profile?.address;
-                        const displayPhone = isWasher 
-                            ? booking.user_profile?.mobile_number 
-                            : null;
+                        const customerName = booking.user_profile?.name;
+                        const customerPhone = booking.user_profile?.mobile_number;
                         const serviceName = booking.wash_service?.name;
                         const servicePrice = booking.wash_service?.price;
                         const serviceDuration = booking.wash_service?.duration_minutes;
 
-                        return (
-                            <Pressable key={booking.id} style={styles.bookingCard}>
-                                {/* Status Badge */}
-                                <View style={[styles.statusBadge, { 
-                                    backgroundColor: status.bg, 
-                                    borderColor: status.border 
-                                }]}>
-                                    <Icon 
-                                        name={status.icon} 
-                                        type="material" 
-                                        size={16} 
-                                        color={status.text} 
-                                    />
-                                    <Text style={[styles.statusText, { color: status.text }]}>
-                                        {status.label}
-                                    </Text>
-                                </View>
+                        const isPending = booking.status === 'pending';
+                        const isInProgress = booking.status === 'in_progress';
 
-                                {/* Main Info - Washer or Customer based on role */}
+                        return (
+                            <View key={booking.id} style={styles.bookingCard}>
+                                {/* Status Badge */}
+                                {isPending && (
+                                    <View style={styles.pendingBadge}>
+                                        <Icon name="schedule" type="material" size={16} color="#92400E" />
+                                        <Text style={styles.pendingText}>قيد الانتظار</Text>
+                                    </View>
+                                )}
+                                {isInProgress && (
+                                    <View style={styles.inProgressBadge}>
+                                        <Icon name="hourglass-empty" type="material" size={16} color="#1E40AF" />
+                                        <Text style={styles.inProgressText}>قيد التنفيذ</Text>
+                                    </View>
+                                )}
+
+                                {/* Customer Info */}
                                 <View style={styles.mainSection}>
-                                    <Icon 
-                                        name={isWasher ? "person" : "store"} 
-                                        type="material" 
-                                        size={24} 
-                                        color="#007AFF" 
-                                    />
+                                    <Icon name="person" type="material" size={24} color="#007AFF" />
                                     <View style={styles.mainInfo}>
-                                        <Text style={styles.mainName}>{displayName || "غير متوفر"}</Text>
-                                        {displayAddress && (
-                                            <Text style={styles.subInfo}>{displayAddress}</Text>
-                                        )}
-                                        {displayPhone && (
-                                            <Text style={styles.subInfo}>{displayPhone}</Text>
+                                        <Text style={styles.mainName}>{customerName || "عميل"}</Text>
+                                        {customerPhone && (
+                                            <Text style={styles.subInfo}>{customerPhone}</Text>
                                         )}
                                     </View>
                                 </View>
@@ -236,21 +241,53 @@ function History() {
                                 <View style={styles.timeSection}>
                                     <View style={styles.timeRow}>
                                         <Icon name="event" type="material" size={18} color="#6B7280" />
-                                        <Text style={styles.timeLabel}>التاريخ</Text>
+                                        <Text style={styles.timeLabel}>التاريخ:</Text>
                                         <Text style={styles.timeValue}>{date}</Text>
                                     </View>
                                     <View style={styles.timeRow}>
                                         <Icon name="access-time" type="material" size={18} color="#6B7280" />
-                                        <Text style={styles.timeLabel}> الوقت</Text>
+                                        <Text style={styles.timeLabel}>الوقت:</Text>
                                         <Text style={styles.timeValue}>{time}</Text>
                                     </View>
                                 </View>
+
+                                {/* Action Buttons */}
+                                {isPending && (
+                                    <View style={styles.actionButtons}>
+                                        <Pressable 
+                                            style={styles.confirmButton}
+                                            onPress={() => updateBookingStatus(booking.id, 'in_progress')}
+                                        >
+                                            <Icon name="check-circle" type="material" size={20} color="#FFFFFF" />
+                                            <Text style={styles.confirmText}>تأكيد</Text>
+                                        </Pressable>
+                                        
+                                        <Pressable 
+                                            style={styles.cancelButton}
+                                            onPress={() => handleCancelBooking(booking.id)}
+                                        >
+                                            <Icon name="cancel" type="material" size={20} color="#FFFFFF" />
+                                            <Text style={styles.cancelText}>رفض</Text>
+                                        </Pressable>
+                                    </View>
+                                )}
+                                {isInProgress && (
+                                    <View style={styles.actionButtons}>
+                                        <Pressable 
+                                            style={styles.completedButton}
+                                            onPress={() => updateBookingStatus(booking.id, 'completed')}
+                                        >
+                                            <Icon name="check-circle-outline" type="material" size={20} color="#FFFFFF" />
+                                            <Text style={styles.completedText}>إكمال الخدمة</Text>
+                                        </Pressable>
+                                    </View>
+                                )}
 
                                 {/* Booking ID */}
                                 <View style={styles.bookingFooter}>
                                     <Text style={styles.bookingId}>رقم الحجز: #{booking.id}</Text>
                                 </View>
-                            </Pressable>
+                            </View>
                         );
                     })
                 )}
@@ -305,13 +342,13 @@ const styles = StyleSheet.create({
         color: "#111827",
     },
     bookingCount: {
-        backgroundColor: "#007AFF",
+        backgroundColor: "#F59E0B",
         width: 36,
         height: 36,
         borderRadius: 18,
         justifyContent: "center",
         alignItems: "center",
-        shadowColor: "#007AFF",
+        shadowColor: "#F59E0B",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
@@ -350,7 +387,7 @@ const styles = StyleSheet.create({
         elevation: 4,
         gap: 14,
     },
-    statusBadge: {
+    pendingBadge: {
         flexDirection: "row",
         alignItems: "center",
         alignSelf: "flex-start",
@@ -358,11 +395,31 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 16,
         borderWidth: 2,
+        backgroundColor: "#FEF3C7",
+        borderColor: "#FCD34D",
         gap: 6,
     },
-    statusText: {
+    pendingText: {
         fontSize: 13,
         fontWeight: "800",
+        color: "#92400E",
+    },
+    inProgressBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-start",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        borderWidth: 2,
+        backgroundColor: "#DBEAFE",
+        borderColor: "#93C5FD",
+        gap: 6,
+    },
+    inProgressText: {
+        fontSize: 13,
+        fontWeight: "800",
+        color: "#1E40AF",
     },
     mainSection: {
         flexDirection: "row",
@@ -432,12 +489,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: 8,
     },
-    timeContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        flex: 1,
-    },
     timeLabel: {
         fontSize: 14,
         fontWeight: "600",
@@ -448,6 +499,70 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "#111827",
         flex: 1,
+    },
+    actionButtons: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    confirmButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#10B981",
+        paddingVertical: 12,
+        borderRadius: 12,
+        gap: 8,
+        shadowColor: "#10B981",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    confirmText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#FFFFFF",
+    },
+    cancelButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#EF4444",
+        paddingVertical: 12,
+        borderRadius: 12,
+        gap: 8,
+        shadowColor: "#EF4444",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    cancelText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#FFFFFF",
+    },
+    completedButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#7C3AED",
+        paddingVertical: 12,
+        borderRadius: 12,
+        gap: 8,
+        shadowColor: "#7C3AED",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    completedText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#FFFFFF",
     },
     bookingFooter: {
         paddingTop: 8,
@@ -465,4 +580,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default History;
+export default Bookings;

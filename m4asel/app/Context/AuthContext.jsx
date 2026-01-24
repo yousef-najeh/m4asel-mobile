@@ -8,11 +8,11 @@ export const AuthContext = createContext();
 
 // Custom hook to use auth context
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
 };
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             const profileData = await response.json();
-            setProfile(profileData);
+            setProfile(Object.freeze(profileData));
             setError(null);
         } catch (err) {
             console.error('Error fetching profile:', err);
@@ -52,14 +52,14 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setUser(firebaseUser);
-            
+
             if (firebaseUser) {
                 await fetchProfile(firebaseUser);
             } else {
                 setProfile(null);
                 setError(null);
             }
-            
+
             setLoading(false);
         });
 
@@ -76,11 +76,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider 
-            value={{ 
-                user, 
-                profile, 
-                loading, 
+        <AuthContext.Provider
+            value={{
+                user,
+                profile,
+                loading,
                 error,
                 refreshProfile,
                 isAuthenticated: !!user,

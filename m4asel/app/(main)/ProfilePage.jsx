@@ -5,6 +5,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "../Context/AuthContext";
 import { auth } from "../../util/fireBaseConfig";
 import { Icon } from 'react-native-elements';
+import { UserRole } from "../../constants/UserRole";
 
 const ProfilePage = () => {
   const { user, profile, role, washerProfile, loading } = useAuth();
@@ -27,16 +28,16 @@ const ProfilePage = () => {
     );
   }
 
-  const isWasher = role === 'washer_owner' || role === 'washer_worker';
+  const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
   const userName = profile?.name || user?.displayName || "مستخدم";
   const userMobile = profile?.mobile_number || "غير متوفر";
 
   const roleLabels = {
-    admin: "مدير النظام",
-    confirmed_user: "مستخدم مؤكد",
-    unconfirmed_user: "مستخدم غير مؤكد",
-    washer_owner: "مالك مغسلة",
-    washer_worker: "عامل مغسلة",
+    [UserRole.ADMIN]: "مدير النظام",
+    [UserRole.CONFIRMED_USER]: "مستخدم مؤكد",
+    [UserRole.UNCONFIRMED_USER]: "مستخدم غير مؤكد",
+    [UserRole.WASHER_OWNER]: "مالك مغسلة",
+    [UserRole.WASHER_WORKER]: "عامل مغسلة",
   };
 
   return (
@@ -85,7 +86,9 @@ const ProfilePage = () => {
               <View style={styles.services}>
                 <Text style={styles.servicesLabel}>الخدمات</Text>
                 {washerProfile.wash_services.map((service, index) => (
-                  <Text key={index} style={styles.serviceItem}>• {service}</Text>
+                  <Text key={index} style={styles.serviceItem}>
+                    • {service.name} - {service.price} nis ({service.duration_minutes} دقيقة)
+                  </Text>
                 ))}
               </View>
             )}
@@ -93,7 +96,7 @@ const ProfilePage = () => {
         )}
 
         {/* Warning for unconfirmed users */}
-        {role === 'unconfirmed_user' && (
+        {role === UserRole.UNCONFIRMED_USER && (
           <View style={styles.warning}>
             <Icon name="info" type="material" size={20} color="#F59E0B" />
             <Text style={styles.warningText}>حسابك بانتظار التأكيد</Text>
