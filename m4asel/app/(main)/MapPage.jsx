@@ -3,6 +3,7 @@ import { StyleSheet, View, FlatList, Dimensions } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapCard from "../Components/MapCard";
 import * as Location from "expo-location";
+import { useAuth } from "../Context/AuthContext";
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = WINDOW_WIDTH * 0.8;
@@ -16,6 +17,8 @@ const MapPage = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+  const { user } = useAuth();
+  const eventSourceRef = useRef(null);
 
   const focusOnMarker = (item) => {
     if (!item || !mapRef.current) return;
@@ -87,6 +90,125 @@ const MapPage = () => {
 
     fetchWashers();
   }, [apiUrl]);
+
+  // SSE Connection for real-time booking updates
+  useEffect(() => {
+    if (!user) return;
+
+    const setupSSE = async () => {
+      try {
+        const eventsUrl = `${apiUrl}/bookings/events`;
+        console.log('Attempting SSE connection to:', eventsUrl);
+
+        // Create SSE connection
+        const response = await fetch(eventsUrl, {
+          headers: {
+            'Accept': 'text/event-stream'
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('SSE connection failed:', response.status, errorText);
+          console.error('URL attempted:', eventsUrl);
+          return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        // Read stream
+        const processStream = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const messages = buffer.split('\n\n');
+              console.log('SSE chunk received:', messages);
+              buffer = messages.pop() || '';
+
+              for (const message of messages) {
+                if (!message.trim()) continue;
+                
+                const lines = message.split('\n');
+                let eventType = null;
+                let eventData = null;
+                
+                for (const line of lines) {
+                  if (line.startsWith('event: ')) {
+                    eventType = line.substring(7).trim();
+                  } else if (line.startsWith('data: ')) {
+                    const jsonData = line.substring(6).trim();
+                    try {
+                      eventData = JSON.parse(jsonData);
+                    } catch (e) {
+                      console.error('Error parsing SSE data:', e);
+                    }
+                  }
+                }
+                
+                if (eventType && eventData) {
+                  handleSSEEvent({ event_type: eventType, data: eventData });
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error reading stream:', error);
+          }
+        };
+
+        processStream();
+        eventSourceRef.current = { reader, response };
+      } catch (error) {
+        console.error('Error setting up SSE:', error);
+      }
+    };
+
+    setupSSE();
+
+    // Cleanup on unmount
+    return () => {
+      if (eventSourceRef.current) {
+        try {
+          eventSourceRef.current.reader?.cancel();
+        } catch (e) {
+          console.error('Error closing SSE:', e);
+        }
+      }
+    };
+  }, [user, apiUrl]);
+
+  // Handle SSE events
+  const handleSSEEvent = (event) => {
+    const { event_type, data } = event;
+
+    if (event_type === 'booking_created' || event_type === 'booking_cancelled') {
+      const { washer_id, scheduled_time } = data;
+      
+      // Update the specific washer in the locations array
+      setLocations(prevLocations => 
+        prevLocations.map(washer => {
+          if (washer.id === washer_id) {
+            const currentNextAvailable = washer.next_available_time ? new Date(washer.next_available_time) : null;
+            const newScheduledTime = new Date(scheduled_time);
+            
+            // Only update if scheduled_time is less than or equal to current next_available_time
+            // or if there's no current next_available_time
+            if (!currentNextAvailable || newScheduledTime <= currentNextAvailable) {
+              return {
+                ...washer,
+                next_available_time: scheduled_time,
+              };
+            }
+          }
+          return washer;
+        })
+      );
+    }
+  };
 
   const initialRegion = {
     latitude: userLocation?.latitude || 24.7136,
