@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, Alert } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Icon } from 'react-native-elements';
-import { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../Context/AuthContext';
+import { formatDateTime } from "../utils/helpers";
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -12,29 +13,20 @@ function Bookings() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Fetch active bookings (pending and in_progress) from API
     const fetchBookings = async () => {
         try {
             setLoading(true);
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/bookings/`, {
                 method: 'GET',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to fetch bookings: ${response.status}`);
-            }
-            
+            if (!response.ok) throw new Error(`${response.status}`);
             const data = await response.json();
-            // Filter to show only pending and in_progress bookings
-            const activeBookings = Array.isArray(data) 
+            const active = Array.isArray(data)
                 ? data.filter(b => b.status === 'pending' || b.status === 'in_progress')
                 : [];
-            setBookings(activeBookings);
+            setBookings(active);
         } catch (error) {
             console.error('Error fetching bookings:', error);
             setBookings([]);
@@ -49,244 +41,185 @@ function Bookings() {
         setRefreshing(false);
     };
 
-    useEffect(() => {
-        fetchBookings();
-    }, []);
+    useEffect(() => { fetchBookings(); }, []);
 
-    // Update booking status
-    const updateBookingStatus = async (bookingId, newStatus, cancelReason = null) => {
+    const updateStatus = async (bookingId, newStatus, cancelReason = null) => {
         try {
             const token = await user.getIdToken();
             const body = { status: newStatus };
-            if (cancelReason) {
-                body.cancel_reason = cancelReason;
-            }
-            
+            if (cancelReason) body.cancel_reason = cancelReason;
             const response = await fetch(`${apiUrl}/bookings/${bookingId}/status`, {
                 method: 'PATCH',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to update booking: ${response.status}`);
-            }
-            
-            // Refresh bookings after update
+            if (!response.ok) throw new Error(`${response.status}`);
             await fetchBookings();
-        } catch (error) {
-            console.error('Error updating booking:', error);
-            Alert.alert('خطأ', 'فشل تحديث حالة الحجز');
+        } catch {
+            Alert.alert('خطأ', 'فشل تحديث حالة الطلب');
         }
     };
 
-    // Handle cancel with reason
-    const handleCancelBooking = (bookingId) => {
-        Alert.alert(
-            'رفض الحجز',
-            'يرجى اختيار سبب الرفض:',
-            [
-                {
-                    text: 'مشغول في هذا الوقت',
-                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'مشغول في هذا الوقت')
-                },
-                {
-                    text: 'لا يمكنني تقديم هذه الخدمة',
-                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'لا يمكنني تقديم هذه الخدمة')
-                },
-                {
-                    text: 'سبب آخر',
-                    onPress: () => updateBookingStatus(bookingId, 'cancelled', 'تم الرفض من قبل المغسلة')
-                },
-                {
-                    text: 'إلغاء',
-                    style: 'cancel'
-                }
-            ]
-        );
-    };
-
-    // Format date and time
-    const formatDateTime = (isoString) => {
-        if (!isoString) return { date: "---", time: "---" };
-        try {
-            const date = new Date(isoString);
-            
-            const monthNames = [
-                "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
-                "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-            ];
-            
-            const day = date.getDate();
-            const month = monthNames[date.getMonth()];
-            const year = date.getFullYear();
-            const dateStr = `${day} ${month} ${year}`;
-            
-            let hours = date.getHours();
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'مساءً' : 'صباحاً';
-            hours = hours % 12 || 12;
-            const timeStr = `${hours}:${minutes} ${ampm}`;
-            
-            return { date: dateStr, time: timeStr };
-        } catch (_e) {
-            return { date: "---", time: "---" };
-        }
+    const handleReject = (bookingId) => {
+        Alert.alert('رفض الطلب', 'يرجى اختيار سبب الرفض:', [
+            { text: 'مشغول في هذا الوقت', onPress: () => updateStatus(bookingId, 'cancelled', 'مشغول في هذا الوقت') },
+            { text: 'لا يمكنني تقديم هذه الخدمة', onPress: () => updateStatus(bookingId, 'cancelled', 'لا يمكنني تقديم هذه الخدمة') },
+            { text: 'سبب آخر', onPress: () => updateStatus(bookingId, 'cancelled', 'تم الرفض من قبل المغسلة') },
+            { text: 'إلغاء', style: 'cancel' }
+        ]);
     };
 
     if (loading) {
         return (
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <View style={styles.loadingContainer}>
-                    <Icon name="event-note" type="material" size={48} color="#D1D5DB" />
-                    <Text style={styles.loadingText}>جارٍ التحميل...</Text>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                    <Text style={styles.loadingText}>جارٍ تحميل الطلبات...</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
+    const pendingCount = bookings.filter(b => b.status === 'pending').length;
+    const inProgressCount = bookings.filter(b => b.status === 'in_progress').length;
+
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <ScrollView 
+            <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.contentContainer}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007AFF" />}
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.headerContent}>
-                        <Icon name="event-note" type="material" size={28} color="#111827" />
-                        <Text style={styles.headerTitle}>الحجوزات النشطة</Text>
+                    <View style={styles.headerLeft}>
+                        <View style={styles.headerIconCircle}>
+                            <Icon name="handyman" type="material" size={22} color="#007AFF" />
+                        </View>
+                        <View>
+                            <Text style={styles.headerTitle}>طلبات العمل</Text>
+                            <Text style={styles.headerSub}>لوحة تحكم المغسلة</Text>
+                        </View>
                     </View>
-                    <View style={styles.bookingCount}>
-                        <Text style={styles.bookingCountText}>{bookings.length}</Text>
-                    </View>
+                    {bookings.length > 0 && (
+                        <View style={styles.countBadge}>
+                            <Text style={styles.countText}>{bookings.length}</Text>
+                        </View>
+                    )}
                 </View>
 
-                {/* Bookings List */}
+                {/* Summary pills */}
+                {bookings.length > 0 && (
+                    <View style={styles.summaryRow}>
+                        <View style={[styles.summaryPill, styles.pillPending]}>
+                            <Icon name="schedule" type="material" size={14} color="#92400E" />
+                            <Text style={[styles.summaryText, { color: '#92400E' }]}>{pendingCount} بانتظار القبول</Text>
+                        </View>
+                        <View style={[styles.summaryPill, styles.pillProgress]}>
+                            <Icon name="autorenew" type="material" size={14} color="#1E40AF" />
+                            <Text style={[styles.summaryText, { color: '#1E40AF' }]}>{inProgressCount} قيد التنفيذ</Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Empty state */}
                 {bookings.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Icon name="event-available" type="material" size={64} color="#D1D5DB" />
-                        <Text style={styles.emptyTitle}>لا توجد حجوزات نشطة</Text>
-                        <Text style={styles.emptyText}>جميع الحجوزات قد تم إكمالها</Text>
+                        <View style={styles.emptyIconCircle}>
+                            <Icon name="event-available" type="material" size={32} color="#9CA3AF" />
+                        </View>
+                        <Text style={styles.emptyTitle}>لا توجد طلبات نشطة</Text>
+                        <Text style={styles.emptyText}>ستظهر هنا طلبات العملاء الجديدة</Text>
                     </View>
                 ) : (
                     bookings.map((booking) => {
                         const { date, time } = formatDateTime(booking.scheduled_time);
-                        const customerName = booking.user_profile?.name;
+                        const customerName = booking.user_profile?.name || 'عميل';
                         const customerPhone = booking.user_profile?.mobile_number;
                         const serviceName = booking.wash_service?.name;
                         const servicePrice = booking.wash_service?.price;
                         const serviceDuration = booking.wash_service?.duration_minutes;
-
                         const isPending = booking.status === 'pending';
                         const isInProgress = booking.status === 'in_progress';
 
                         return (
-                            <View key={booking.id} style={styles.bookingCard}>
-                                {/* Status Badge */}
-                                {isPending && (
-                                    <View style={styles.pendingBadge}>
-                                        <Icon name="schedule" type="material" size={16} color="#92400E" />
-                                        <Text style={styles.pendingText}>قيد الانتظار</Text>
+                            <View key={booking.id} style={styles.card}>
+                                {/* Card top: status + booking id */}
+                                <View style={styles.cardTop}>
+                                    <View style={[styles.statusBadge, isPending ? styles.badgePending : styles.badgeProgress]}>
+                                        <Icon
+                                            name={isPending ? 'schedule' : 'autorenew'}
+                                            type="material"
+                                            size={13}
+                                            color={isPending ? '#92400E' : '#1E40AF'}
+                                        />
+                                        <Text style={[styles.statusText, isPending ? styles.statusPendingText : styles.statusProgressText]}>
+                                            {isPending ? 'بانتظار القبول' : 'قيد التنفيذ'}
+                                        </Text>
                                     </View>
-                                )}
-                                {isInProgress && (
-                                    <View style={styles.inProgressBadge}>
-                                        <Icon name="hourglass-empty" type="material" size={16} color="#1E40AF" />
-                                        <Text style={styles.inProgressText}>قيد التنفيذ</Text>
-                                    </View>
-                                )}
+                                    <Text style={styles.bookingId}>#{booking.id}</Text>
+                                </View>
 
-                                {/* Customer Info */}
-                                <View style={styles.mainSection}>
-                                    <Icon name="person" type="material" size={24} color="#007AFF" />
-                                    <View style={styles.mainInfo}>
-                                        <Text style={styles.mainName}>{customerName || "عميل"}</Text>
-                                        {customerPhone && (
-                                            <Text style={styles.subInfo}>{customerPhone}</Text>
-                                        )}
+                                {/* Customer row */}
+                                <View style={styles.customerRow}>
+                                    <View style={styles.customerAvatar}>
+                                        <Icon name="person" type="material" size={20} color="#007AFF" />
+                                    </View>
+                                    <View style={styles.customerInfo}>
+                                        <Text style={styles.customerName}>{customerName}</Text>
+                                        {customerPhone && <Text style={styles.customerPhone}>{customerPhone}</Text>}
                                     </View>
                                 </View>
 
-                                {/* Service Details */}
-                                <View style={styles.serviceSection}>
-                                    <View style={styles.infoRow}>
-                                        <Icon name="local-car-wash" type="material" size={20} color="#6B7280" />
-                                        <Text style={styles.serviceName}>{serviceName || "غير محدد"}</Text>
-                                    </View>
-                                    
-                                    <View style={styles.serviceDetails}>
+                                <View style={styles.divider} />
+
+                                {/* Service row */}
+                                <View style={styles.serviceRow}>
+                                    <Text style={styles.serviceName}>{serviceName || 'خدمة غير محددة'}</Text>
+                                    <View style={styles.chips}>
                                         {servicePrice && (
-                                            <View style={styles.detailChip}>
-                                                <Icon name="payments" type="material" size={16} color="#059669" />
-                                                <Text style={styles.detailText}>{servicePrice} nis</Text>
+                                            <View style={[styles.chip, styles.chipGreen]}>
+                                                <Icon name="payments" type="material" size={12} color="#007AFF" />
+                                                <Text style={[styles.chipText, { color: '#007AFF' }]}>{servicePrice} nis</Text>
                                             </View>
                                         )}
                                         {serviceDuration && (
-                                            <View style={styles.detailChip}>
-                                                <Icon name="timer" type="material" size={16} color="#7C3AED" />
-                                                <Text style={styles.detailText}>{serviceDuration} دقيقة</Text>
+                                            <View style={[styles.chip, styles.chipPurple]}>
+                                                <Icon name="timer" type="material" size={12} color="#7C3AED" />
+                                                <Text style={[styles.chipText, { color: '#7C3AED' }]}>{serviceDuration} د</Text>
                                             </View>
                                         )}
                                     </View>
                                 </View>
 
-                                {/* Scheduled Time */}
-                                <View style={styles.timeSection}>
-                                    <View style={styles.timeRow}>
-                                        <Icon name="event" type="material" size={18} color="#6B7280" />
-                                        <Text style={styles.timeLabel}>التاريخ:</Text>
-                                        <Text style={styles.timeValue}>{date}</Text>
-                                    </View>
-                                    <View style={styles.timeRow}>
-                                        <Icon name="access-time" type="material" size={18} color="#6B7280" />
-                                        <Text style={styles.timeLabel}>الوقت:</Text>
-                                        <Text style={styles.timeValue}>{time}</Text>
-                                    </View>
+                                {/* Time row */}
+                                <View style={styles.timeRow}>
+                                    <Icon name="event" type="material" size={15} color="#9CA3AF" />
+                                    <Text style={styles.timeText}>{date}</Text>
+                                    <View style={styles.timeDot} />
+                                    <Icon name="access-time" type="material" size={15} color="#9CA3AF" />
+                                    <Text style={styles.timeText}>{time}</Text>
                                 </View>
 
-                                {/* Action Buttons */}
+                                {/* Actions */}
                                 {isPending && (
-                                    <View style={styles.actionButtons}>
-                                        <Pressable 
-                                            style={styles.confirmButton}
-                                            onPress={() => updateBookingStatus(booking.id, 'in_progress')}
-                                        >
-                                            <Icon name="check-circle" type="material" size={20} color="#FFFFFF" />
-                                            <Text style={styles.confirmText}>تأكيد</Text>
+                                    <View style={styles.actions}>
+                                        <Pressable style={styles.acceptBtn} onPress={() => updateStatus(booking.id, 'in_progress')}>
+                                            <Icon name="check-circle" type="material" size={18} color="#FFFFFF" />
+                                            <Text style={styles.actionText}>قبول</Text>
                                         </Pressable>
-                                        
-                                        <Pressable 
-                                            style={styles.cancelButton}
-                                            onPress={() => handleCancelBooking(booking.id)}
-                                        >
-                                            <Icon name="cancel" type="material" size={20} color="#FFFFFF" />
-                                            <Text style={styles.cancelText}>رفض</Text>
+                                        <Pressable style={styles.rejectBtn} onPress={() => handleReject(booking.id)}>
+                                            <Icon name="cancel" type="material" size={18} color="#FFFFFF" />
+                                            <Text style={styles.actionText}>رفض</Text>
                                         </Pressable>
                                     </View>
                                 )}
                                 {isInProgress && (
-                                    <View style={styles.actionButtons}>
-                                        <Pressable 
-                                            style={styles.completedButton}
-                                            onPress={() => updateBookingStatus(booking.id, 'completed')}
-                                        >
-                                            <Icon name="check-circle-outline" type="material" size={20} color="#FFFFFF" />
-                                            <Text style={styles.completedText}>إكمال الخدمة</Text>
-                                        </Pressable>
-                                    </View>
+                                    <Pressable style={styles.completeBtn} onPress={() => updateStatus(booking.id, 'completed')}>
+                                        <Icon name="check-circle-outline" type="material" size={18} color="#FFFFFF" />
+                                        <Text style={styles.actionText}>إكمال الخدمة</Text>
+                                    </Pressable>
                                 )}
-
-                                {/* Booking ID */}
-                                <View style={styles.bookingFooter}>
-                                    <Text style={styles.bookingId}>رقم الحجز: #{booking.id}</Text>
-                                </View>
                             </View>
                         );
                     })
@@ -299,285 +232,166 @@ function Bookings() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#F9FAFB",
-    },
-    container: {
-        flex: 1,
-        backgroundColor: "#F9FAFB",
-    },
-    contentContainer: {
-        padding: 16,
-        paddingTop: 20,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 16,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: "#6B7280",
-        fontWeight: "600",
-    },
+    safeArea: { flex: 1, backgroundColor: '#F0F6FF' },
+    container: { flex: 1, backgroundColor: '#F0F6FF' },
+    contentContainer: { padding: 16, paddingTop: 20 },
+
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+    loadingText: { fontSize: 15, color: '#6B7280', fontWeight: '600' },
+
+    // Header
     header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20,
-        paddingBottom: 16,
-        borderBottomWidth: 2,
-        borderBottomColor: "#E5E7EB",
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 14,
     },
-    headerContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 12,
+    headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    headerIconCircle: {
+        width: 46,
+        height: 46,
+        borderRadius: 14,
+        backgroundColor: '#EFF6FF',
+        borderWidth: 1.5,
+        borderColor: '#BFDBFE',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: "800",
-        color: "#111827",
-    },
-    bookingCount: {
-        backgroundColor: "#F59E0B",
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        justifyContent: "center",
-        alignItems: "center",
-        shadowColor: "#F59E0B",
+    headerTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+    headerSub: { fontSize: 12, color: '#6B7280', fontWeight: '500', marginTop: 1 },
+    countBadge: {
+        backgroundColor: '#007AFF',
+        minWidth: 32,
+        height: 32,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        shadowColor: '#007AFF',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
     },
-    bookingCountText: {
-        fontSize: 16,
-        fontWeight: "800",
-        color: "#FFFFFF",
-    },
-    emptyState: {
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 80,
-        gap: 12,
-    },
-    emptyTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#374151",
-        marginTop: 16,
-    },
-    emptyText: {
-        fontSize: 15,
-        color: "#6B7280",
-    },
-    bookingCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        padding: 18,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-        gap: 14,
-    },
-    pendingBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
+    countText: { fontSize: 15, fontWeight: '800', color: '#FFFFFF' },
+
+    // Summary
+    summaryRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+    summaryPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
         paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        borderWidth: 2,
-        backgroundColor: "#FEF3C7",
-        borderColor: "#FCD34D",
-        gap: 6,
-    },
-    pendingText: {
-        fontSize: 13,
-        fontWeight: "800",
-        color: "#92400E",
-    },
-    inProgressBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        borderWidth: 2,
-        backgroundColor: "#DBEAFE",
-        borderColor: "#93C5FD",
-        gap: 6,
-    },
-    inProgressText: {
-        fontSize: 13,
-        fontWeight: "800",
-        color: "#1E40AF",
-    },
-    mainSection: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-    },
-    mainInfo: {
-        flex: 1,
-        gap: 4,
-    },
-    mainName: {
-        fontSize: 18,
-        fontWeight: "800",
-        color: "#111827",
-    },
-    subInfo: {
-        fontSize: 13,
-        fontWeight: "500",
-        color: "#6B7280",
-    },
-    serviceSection: {
-        gap: 10,
-    },
-    infoRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-    },
-    serviceName: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#374151",
-        flex: 1,
-    },
-    serviceDetails: {
-        flexDirection: "row",
-        gap: 8,
-        flexWrap: "wrap",
-    },
-    detailChip: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#F9FAFB",
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 12,
-        gap: 4,
+        paddingVertical: 7,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: "#E5E7EB",
     },
-    detailText: {
-        fontSize: 13,
-        fontWeight: "700",
-        color: "#374151",
+    pillPending: { backgroundColor: '#FEF3C7', borderColor: '#FCD34D' },
+    pillProgress: { backgroundColor: '#DBEAFE', borderColor: '#93C5FD' },
+    summaryText: { fontSize: 12, fontWeight: '700' },
+
+    // Empty
+    emptyState: { alignItems: 'center', paddingVertical: 80, gap: 12 },
+    emptyIconCircle: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 4,
     },
-    timeSection: {
-        backgroundColor: "#F9FAFB",
-        borderRadius: 12,
-        padding: 12,
-        gap: 8,
-    },
-    timeRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-    },
-    timeLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#6B7280",
-    },
-    timeValue: {
-        fontSize: 14,
-        fontWeight: "700",
-        color: "#111827",
-        flex: 1,
-    },
-    actionButtons: {
-        flexDirection: "row",
+    emptyTitle: { fontSize: 18, fontWeight: '700', color: '#374151' },
+    emptyText: { fontSize: 14, color: '#9CA3AF', fontWeight: '500' },
+
+    // Card
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 14,
         gap: 12,
-    },
-    confirmButton: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#10B981",
-        paddingVertical: 12,
-        borderRadius: 12,
-        gap: 8,
-        shadowColor: "#10B981",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
     },
-    confirmText: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: "#FFFFFF",
+    cardTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
-    cancelButton: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#EF4444",
-        paddingVertical: 12,
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 8,
+        borderWidth: 1,
+    },
+    badgePending: { backgroundColor: '#FEF3C7', borderColor: '#FCD34D' },
+    badgeProgress: { backgroundColor: '#DBEAFE', borderColor: '#93C5FD' },
+    statusText: { fontSize: 12, fontWeight: '700' },
+    statusPendingText: { color: '#92400E' },
+    statusProgressText: { color: '#1E40AF' },
+    bookingId: { fontSize: 12, fontWeight: '600', color: '#9CA3AF' },
+
+    // Customer
+    customerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    customerAvatar: {
+        width: 42,
+        height: 42,
         borderRadius: 12,
-        gap: 8,
-        shadowColor: "#EF4444",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+        backgroundColor: '#EFF6FF',
+        borderWidth: 1.5,
+        borderColor: '#BFDBFE',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    cancelText: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: "#FFFFFF",
+    customerInfo: { flex: 1, gap: 3 },
+    customerName: { fontSize: 16, fontWeight: '800', color: '#111827' },
+    customerPhone: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+
+    divider: { height: 1, backgroundColor: '#F3F4F6' },
+
+    // Service
+    serviceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    serviceName: { fontSize: 14, fontWeight: '700', color: '#374151', flex: 1 },
+    chips: { flexDirection: 'row', gap: 6 },
+    chip: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
+    chipGreen: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+    chipPurple: { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' },
+    chipText: { fontSize: 11, fontWeight: '700' },
+
+    // Time
+    timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F9FAFB', padding: 10, borderRadius: 10 },
+    timeText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+    timeDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB', marginHorizontal: 2 },
+
+    // Actions
+    actions: { flexDirection: 'row', gap: 10 },
+    acceptBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 6, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 12,
+        shadowColor: '#007AFF', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
     },
-    completedButton: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#7C3AED",
-        paddingVertical: 12,
-        borderRadius: 12,
-        gap: 8,
-        shadowColor: "#7C3AED",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 3,
+    rejectBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 6, backgroundColor: '#EF4444', paddingVertical: 12, borderRadius: 12,
+        shadowColor: '#EF4444', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
     },
-    completedText: {
-        fontSize: 15,
-        fontWeight: "700",
-        color: "#FFFFFF",
+    completeBtn: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 6, backgroundColor: '#7C3AED', paddingVertical: 12, borderRadius: 12,
+        shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3,
     },
-    bookingFooter: {
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: "#F3F4F6",
-    },
-    bookingId: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: "#9CA3AF",
-        textAlign: "center",
-    },
-    bottomSpacer: {
-        height: 100,
-    },
+    actionText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+
+    bottomSpacer: { height: 100 },
 });
 
 export default Bookings;
