@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator, Alert, KeyboardAvoidingView, Modal,
-    Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+    Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 
@@ -14,6 +14,7 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
     const [price, setPrice] = useState('');
     const [duration, setDuration] = useState('');
     const [description, setDescription] = useState('');
+    const [isActive, setIsActive] = useState(true);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -22,6 +23,7 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
             setPrice(service?.price != null ? String(service.price) : '');
             setDuration(service?.duration_minutes != null ? String(service.duration_minutes) : '');
             setDescription(service?.description ?? '');
+            setIsActive(service?.is_active ?? true);
         }
     }, [visible, service]);
 
@@ -37,6 +39,7 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
                 price: parseFloat(price),
                 duration_minutes: parseInt(duration, 10),
                 description: description.trim() || null,
+                ...(isEdit && { is_active: isActive }),
             };
 
             const url = isEdit
@@ -133,6 +136,23 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
                             />
                         </Field>
 
+                        {isEdit && (
+                            <View style={styles.toggleRow}>
+                                <Switch
+                                    value={isActive}
+                                    onValueChange={setIsActive}
+                                    trackColor={{ false: '#E5E7EB', true: '#BFDBFE' }}
+                                    thumbColor={isActive ? '#007AFF' : '#9CA3AF'}
+                                />
+                                <View style={styles.toggleInfo}>
+                                    <Text style={styles.toggleLabel}>حالة الخدمة</Text>
+                                    <Text style={[styles.toggleStatus, { color: isActive ? '#059669' : '#EF4444' }]}>
+                                        {isActive ? 'مفعّلة — تظهر للعملاء' : 'معطّلة — مخفية عن العملاء'}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
                         <Pressable
                             style={[styles.saveBtn, !isValid && styles.saveBtnDisabled]}
                             onPress={handleSave}
@@ -217,4 +237,18 @@ const styles = StyleSheet.create({
     },
     saveBtnDisabled: { backgroundColor: '#D1D5DB', shadowColor: 'transparent', elevation: 0 },
     saveBtnText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+
+    toggleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 14,
+        padding: 14,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+    },
+    toggleInfo: { flex: 1, gap: 3 },
+    toggleLabel: { fontSize: 14, fontWeight: '700', color: '#374151', textAlign: 'right' },
+    toggleStatus: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
 });

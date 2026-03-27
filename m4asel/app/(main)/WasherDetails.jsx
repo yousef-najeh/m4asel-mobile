@@ -155,7 +155,7 @@ export default function WasherDetails() {
                         </View>
                     ) : (
                         services.map((s, i) => (
-                            <View key={s.id ?? i} style={[styles.serviceCard, i < services.length - 1 && styles.serviceCardBorder]}>
+                            <View key={s.id ?? i} style={[styles.serviceCard, i < services.length - 1 && styles.serviceCardBorder, !s.is_active && styles.serviceCardInactive]}>
                                 <View style={styles.serviceTop}>
                                     <View style={styles.serviceActions}>
                                         <Pressable style={styles.actionBtn} onPress={() => handleDelete(s)}>
@@ -166,7 +166,14 @@ export default function WasherDetails() {
                                         </Pressable>
                                     </View>
                                     <View style={styles.serviceInfo}>
-                                        <Text style={styles.serviceName}>{s.name}</Text>
+                                        <View style={styles.serviceNameRow}>
+                                            {!s.is_active && (
+                                                <View style={styles.inactiveBadge}>
+                                                    <Text style={styles.inactiveBadgeText}>معطّل</Text>
+                                                </View>
+                                            )}
+                                            <Text style={[styles.serviceName, !s.is_active && styles.serviceNameInactive]}>{s.name}</Text>
+                                        </View>
                                         <View style={styles.serviceChips}>
                                             <View style={styles.chipPurple}>
                                                 <Icon name="timer" type="material" size={12} color="#7C3AED" />
@@ -298,9 +305,18 @@ const styles = StyleSheet.create({
     noServicesText: { fontSize: 14, color: '#9CA3AF', fontWeight: '500' },
     serviceCard: { paddingVertical: 14 },
     serviceCardBorder: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+    serviceCardInactive: { opacity: 0.5 },
     serviceTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
     serviceInfo: { flex: 1, alignItems: 'flex-end', gap: 6 },
+    serviceNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' },
     serviceName: { fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'right' },
+    serviceNameInactive: { color: '#9CA3AF' },
+    inactiveBadge: {
+        backgroundColor: '#FEF2F2', borderRadius: 6,
+        paddingHorizontal: 7, paddingVertical: 2,
+        borderWidth: 1, borderColor: '#FECACA',
+    },
+    inactiveBadgeText: { fontSize: 11, fontWeight: '700', color: '#EF4444' },
     serviceChips: { flexDirection: 'row', gap: 6 },
     serviceActions: { flexDirection: 'row', gap: 6 },
     actionBtn: {
