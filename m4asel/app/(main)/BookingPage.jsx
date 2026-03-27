@@ -81,10 +81,15 @@ function BookingPage() {
             setBookingLoading(true);
             const token = await user.getIdToken();
             
+            const rawDatetime = selectedTime.includes('T')
+                ? selectedTime
+                : `${selectedDate}T${selectedTime}`;
+            const scheduled_time = new Date(rawDatetime).toISOString();
+
             const bookingData = {
                 washer_id: parseInt(washerId),
                 wash_service_id: selectedService.id,
-                scheduled_start: selectedTime
+                scheduled_start: scheduled_time,
             };
 
             const response = await fetch(`${apiUrl}/bookings/`, {
@@ -98,8 +103,11 @@ function BookingPage() {
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.log('Booking creation failed:', errorData);
-                const errorMessage = errorData.detail || errorData.message || 'فشل في إنشاء الحجز';
+                console.log('Booking creation failed:', JSON.stringify(errorData, null, 2));
+                const detail = errorData.detail;
+                const errorMessage = Array.isArray(detail)
+                    ? detail.map(e => `${e.loc?.join('.')} — ${e.msg}`).join('\n')
+                    : detail || errorData.message || 'فشل في إنشاء الحجز';
                 throw new Error(errorMessage);
             }
 
