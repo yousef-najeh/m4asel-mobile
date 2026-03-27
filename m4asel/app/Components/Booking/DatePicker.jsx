@@ -1,68 +1,46 @@
 import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 
-function DatePicker({ selectedDate, onSelectDate }) {
-    const getDateRange = () => {
-        const dates = [];
-        const today = new Date();
-        
-        // Generate next 7 days
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-            dates.push(date);
-        }
-        
-        return dates;
-    };
+const DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const MONTHS = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
-    const formatDateDisplay = (date, isToday) => {
-        const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        
-        if (isToday) {
-            return 'اليوم';
-        }
-        
-        const dayName = days[date.getDay()];
-        const day = date.getDate();
-        const month = date.getMonth() + 1;
-        
-        return `${dayName}\n${day}/${month}`;
-    };
+const toISO = (date) => date.toISOString().split('T')[0];
 
-    const formatDateISO = (date) => {
-        return date.toISOString().split('T')[0];
-    };
-
-    const dates = getDateRange();
+export default function DatePicker({ selectedDate, onSelectDate }) {
+    const dates = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        return d;
+    });
 
     return (
-        <ScrollView 
-            horizontal 
+        <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.datesScroll}
+            contentContainerStyle={styles.scroll}
             style={styles.container}
         >
-            {dates.map((date, index) => {
-                const dateISO = formatDateISO(date);
-                const isSelected = selectedDate === dateISO;
-                const isToday = index === 0;
-                const displayText = formatDateDisplay(date, isToday);
+            {dates.map((date, i) => {
+                const iso = toISO(date);
+                const isSelected = selectedDate === iso;
+                const isToday = i === 0;
 
                 return (
                     <Pressable
-                        key={index}
-                        style={[
-                            styles.dateCard,
-                            isSelected && styles.dateCardSelected
-                        ]}
-                        onPress={() => onSelectDate(dateISO)}
+                        key={i}
+                        style={[styles.pill, isSelected && styles.pillSelected]}
+                        onPress={() => onSelectDate(iso)}
                     >
-                        <Text style={[
-                            styles.dateText,
-                            isSelected && styles.dateTextSelected
-                        ]}>
-                            {displayText}
+                        <Text style={[styles.dayName, isSelected && styles.textSelected]}>
+                            {isToday ? 'اليوم' : DAYS[date.getDay()]}
                         </Text>
+                        <Text style={[styles.dayNum, isSelected && styles.textSelected]}>
+                            {date.getDate()}
+                        </Text>
+                        {!isToday && (
+                            <Text style={[styles.monthName, isSelected && styles.textSelectedSub]}>
+                                {MONTHS[date.getMonth()]}
+                            </Text>
+                        )}
                     </Pressable>
                 );
             })}
@@ -71,38 +49,35 @@ function DatePicker({ selectedDate, onSelectDate }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        marginBottom: 16,
+    container: { marginBottom: 16 },
+    scroll: { gap: 8, paddingHorizontal: 2, paddingVertical: 4 },
+    pill: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        minWidth: 66,
+        gap: 2,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
     },
-    datesScroll: {
-        flexDirection: "row",
-        gap: 8,
-        paddingRight: 16,
+    pillSelected: {
+        backgroundColor: '#007AFF',
+        borderColor: '#007AFF',
+        shadowColor: '#007AFF',
+        shadowOpacity: 0.3,
+        elevation: 4,
     },
-    dateCard: {
-        backgroundColor: "#F3F4F6",
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-        minWidth: 70,
-        alignItems: "center",
-    },
-    dateCardSelected: {
-        backgroundColor: "#007AFF",
-        borderColor: "#007AFF",
-    },
-    dateText: {
-        fontSize: 13,
-        fontWeight: "700",
-        color: "#374151",
-        textAlign: "center",
-        lineHeight: 18,
-    },
-    dateTextSelected: {
-        color: "#FFFFFF",
-    },
+    dayName: { fontSize: 11, fontWeight: '600', color: '#9CA3AF' },
+    dayNum: { fontSize: 20, fontWeight: '800', color: '#111827' },
+    monthName: { fontSize: 10, fontWeight: '600', color: '#9CA3AF' },
+    textSelected: { color: '#FFFFFF' },
+    textSelectedSub: { color: 'rgba(255,255,255,0.75)' },
 });
-
-export default DatePicker;
