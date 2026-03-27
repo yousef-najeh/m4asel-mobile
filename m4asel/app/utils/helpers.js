@@ -19,3 +19,8 @@ export const formatTime = (input) => {
         return input;
     }
 };
+
+export const formatDistance = (km) => {
+    if (!km && km !== 0) return null;
+    return km < 1 ? `${(km * 1000).toFixed(0)} م` : `${km.toFixed(1)} كم`;
+};
