@@ -1,7 +1,7 @@
 // context/AuthContext.jsx   ← Save exactly this (overwrite the old one)
 
-import React, { createContext, useContext, useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../../util/fireBaseConfig";
 
 export const AuthContext = createContext();
@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
     const fetchProfile = async (firebaseUser) => {
         try {
             const token = await firebaseUser.getIdToken();
+            console.log("Fetching profile with token:", token);
             const response = await fetch(`${apiUrl}/users/profile`, {
                 method: 'GET',
                 headers: {
@@ -51,6 +52,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setLoading(true);
             setUser(firebaseUser);
 
             if (firebaseUser) {

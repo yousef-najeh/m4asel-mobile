@@ -10,8 +10,9 @@ import { UserRole } from "../../constants/UserRole";
 const allTabs = [
   { route: "/(main)/ProfilePage", iconName: "person", label: "حسابك", showFor: "all" },
   { route: "/(main)/MapPage", iconName: "map", label: "الخريطة", showFor: "regularUser" },
-  { route: "/(main)/Bookings", iconName: "event-note", label: "الحجوزات", showFor: "washer" },
-  { route: "/(main)/History", iconName: "history", label: "السجل", showFor: "all" },
+  { route: "/(main)/Bookings", iconName: "handyman", label: "الطلبات", showFor: "washer" },
+  { route: "/(main)/History", iconName: "history", label: "حجوزاتي", showFor: "regularUser" },
+  { route: "/(main)/History", iconName: "history", label: "السجل", showFor: "washer" },
 ];
 
 export default function MainLayout() {
@@ -33,6 +34,9 @@ export default function MainLayout() {
         tabBar={({ state }) => {
           const currentRoute = state.routes[state.index].name;
 
+          const hiddenScreens = ['WasherDetails', 'BookingPage'];
+          if (hiddenScreens.includes(currentRoute)) return null;
+
           return (
             <View style={styles.container}>
               <View style={styles.bottomBar}>
@@ -52,8 +56,9 @@ export default function MainLayout() {
       >
         <Tabs.Screen name="Bookings" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="History" options={{ tabBarButton: () => null }} />
-        <Tabs.Screen name="MapPage" options={{tabBarButton: () => null }} />
+        <Tabs.Screen name="MapPage" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="ProfilePage" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="WasherDetails" options={{ tabBarButton: () => null }} />
       </Tabs>
     </>
   );
