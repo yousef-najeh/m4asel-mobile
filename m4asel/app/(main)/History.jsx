@@ -4,6 +4,7 @@ import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserRole } from '../../constants/UserRole';
 import { useAuth } from '../Context/AuthContext';
+import { formatDateTime } from '../utils/helpers';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -13,26 +14,6 @@ const statusConfig = {
     completed: { label: "مكتمل",        bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0", icon: "check-circle" },
     cancelled: { label: "ملغي",         bg: "#FEF2F2", text: "#991B1B", border: "#FECACA", icon: "cancel" },
 };
-
-const monthNames = [
-    "يناير","فبراير","مارس","إبريل","مايو","يونيو",
-    "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر",
-];
-
-function formatDateTime(isoString) {
-    if (!isoString) return { date: "---", time: "---" };
-    try {
-        const d = new Date(isoString);
-        const dateStr = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-        let h = d.getHours();
-        const m = String(d.getMinutes()).padStart(2, '0');
-        const ampm = h >= 12 ? 'مساءً' : 'صباحاً';
-        h = h % 12 || 12;
-        return { date: dateStr, time: `${h}:${m} ${ampm}` };
-    } catch {
-        return { date: "---", time: "---" };
-    }
-}
 
 export default function History() {
     const { user, role } = useAuth();
