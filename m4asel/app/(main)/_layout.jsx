@@ -1,11 +1,30 @@
 // app/(main)/_layout.jsx   ← save exactly this
 
-import {router, Stack, Tabs} from "expo-router";
+import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Pressable, Text, View, StyleSheet } from "react-native";
-import { Icon } from 'react-native-elements';
+import { View, StyleSheet } from "react-native";
+import { useAuth } from "../Context/AuthContext";
+import TabButton from "../Components/TabButton";
+import { UserRole } from "../../constants/UserRole";
+
+const allTabs = [
+  { route: "/(main)/ProfilePage", iconName: "person", label: "حسابك", showFor: "all" },
+  { route: "/(main)/MapPage", iconName: "map", label: "الخريطة", showFor: "regularUser" },
+  { route: "/(main)/Bookings", iconName: "handyman", label: "الطلبات", showFor: "washer" },
+  { route: "/(main)/History", iconName: "history", label: "حجوزاتي", showFor: "regularUser" },
+  { route: "/(main)/History", iconName: "history", label: "السجل", showFor: "washer" },
+];
 
 export default function MainLayout() {
+  const { role } = useAuth();
+  const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
+  
+  const tabs = allTabs.filter(tab => 
+    tab.showFor === "all" || 
+    (tab.showFor === "washer" && isWasher) || 
+    (tab.showFor === "regularUser" && !isWasher)
+  );
+
   return (
     <>
       <StatusBar style="dark" backgroundColor="transparent" translucent />
@@ -15,85 +34,31 @@ export default function MainLayout() {
         tabBar={({ state }) => {
           const currentRoute = state.routes[state.index].name;
 
+          const hiddenScreens = ['WasherDetails', 'BookingPage'];
+          if (hiddenScreens.includes(currentRoute)) return null;
+
           return (
             <View style={styles.container}>
               <View style={styles.bottomBar}>
-                <Pressable
-                  onPress={() => router.replace("/(main)/ProfilePage")}
-                  style={styles.tabButton}
-                >
-                  <View style={[
-                    styles.tabContent,
-                    currentRoute === "ProfilePage" && styles.activeTabContent
-                  ]}>
-                    <Icon
-                      name="person"
-                      type="material"
-                      size={24}
-                      color={currentRoute === "ProfilePage" ? "#FFFFFF" : "#6B7280"}
-                    />
-                    <Text style={[
-                      styles.tabText,
-                      currentRoute === "ProfilePage" && styles.activeText
-                    ]}>
-                      حسابك
-                    </Text>
-                  </View>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => router.replace("/(main)/MapPage")}
-                  style={styles.tabButton}
-                >
-                  <View style={[
-                    styles.tabContent,
-                    currentRoute === "MapPage" && styles.activeTabContent
-                  ]}>
-                    <Icon
-                      name="map"
-                      type="material"
-                      size={24}
-                      color={currentRoute === "MapPage" ? "#FFFFFF" : "#6B7280"}
-                    />
-                    <Text style={[
-                      styles.tabText,
-                      currentRoute === "MapPage" && styles.activeText
-                    ]}>
-                      الخريطة
-                    </Text>
-                  </View>
-                </Pressable>
-
-                <Pressable
-                  onPress={() => router.replace("/(main)/History")}
-                  style={styles.tabButton}
-                >
-                  <View style={[
-                    styles.tabContent,
-                    currentRoute === "History" && styles.activeTabContent
-                  ]}>
-                    <Icon
-                      name="history"
-                      type="material"
-                      size={24}
-                      color={currentRoute === "History" ? "#FFFFFF" : "#6B7280"}
-                    />
-                    <Text style={[
-                      styles.tabText,
-                      currentRoute === "History" && styles.activeText
-                    ]}>
-                      السجل
-                    </Text>
-                  </View>
-                </Pressable>
+                {tabs.map((tab, index) => (
+                  <TabButton
+                    key={index}
+                    route={tab.route}
+                    currentRoute={currentRoute}
+                    iconName={tab.iconName}
+                    label={tab.label}
+                  />
+                ))}
               </View>
             </View>
           );
         }}
       >
+        <Tabs.Screen name="Bookings" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="History" options={{ tabBarButton: () => null }} />
-        <Tabs.Screen name="MapPage" options={{tabBarButton: () => null }} />
+        <Tabs.Screen name="MapPage" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="ProfilePage" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="WasherDetails" options={{ tabBarButton: () => null }} />
       </Tabs>
     </>
   );
@@ -124,42 +89,5 @@ const styles = StyleSheet.create({
     elevation: 12,
     borderWidth: 1,
     borderColor: "#F3F4F6",
-  },
-
-  tabButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  tabContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 16,
-    minWidth: 70,
-    gap: 4,
-  },
-
-  activeTabContent: {
-    backgroundColor: "#007AFF",
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  tabText: {
-    color: "#6B7280",
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-
-  activeText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
   },
 });

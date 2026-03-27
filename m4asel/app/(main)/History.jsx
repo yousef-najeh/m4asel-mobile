@@ -1,38 +1,60 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Icon } from 'react-native-elements';
-import { useState, useEffect } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { UserRole } from '../../constants/UserRole';
 import { useAuth } from '../Context/AuthContext';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-function History() {
+const statusConfig = {
+    pending:   { label: "قيد الانتظار", bg: "#FFFBEB", text: "#92400E", border: "#FDE68A", icon: "schedule" },
+    confirmed: { label: "مؤكد",         bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE", icon: "check-circle" },
+    completed: { label: "مكتمل",        bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0", icon: "check-circle" },
+    cancelled: { label: "ملغي",         bg: "#FEF2F2", text: "#991B1B", border: "#FECACA", icon: "cancel" },
+};
+
+const monthNames = [
+    "يناير","فبراير","مارس","إبريل","مايو","يونيو",
+    "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر",
+];
+
+function formatDateTime(isoString) {
+    if (!isoString) return { date: "---", time: "---" };
+    try {
+        const d = new Date(isoString);
+        const dateStr = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        let h = d.getHours();
+        const m = String(d.getMinutes()).padStart(2, '0');
+        const ampm = h >= 12 ? 'مساءً' : 'صباحاً';
+        h = h % 12 || 12;
+        return { date: dateStr, time: `${h}:${m} ${ampm}` };
+    } catch {
+        return { date: "---", time: "---" };
+    }
+}
+
+export default function History() {
     const { user, role } = useAuth();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const isWasher = role === 'washer_owner' || role === 'washer_worker';
+    const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
 
-    // Fetch bookings from API
     const fetchBookings = async () => {
         try {
             setLoading(true);
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/bookings/`, {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                }
+                },
             });
-            
-            if (!response.ok) {
-                throw new Error(`Failed to fetch bookings: ${response.status}`);
-            }
-            
+            if (!response.ok) throw new Error(`Failed to fetch bookings: ${response.status}`);
             const data = await response.json();
-            // Response is an array directly
             setBookings(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching bookings:', error);
@@ -48,67 +70,13 @@ function History() {
         setRefreshing(false);
     };
 
-    useEffect(() => {
-        fetchBookings();
-    }, []);
-
-    // Format date and time
-    const formatDateTime = (isoString) => {
-        if (!isoString) return { date: "---", time: "---" };
-        try {
-            const date = new Date(isoString);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
-            
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const timeStr = `${hours}:${minutes}`;
-            
-            return { date: dateStr, time: timeStr };
-        } catch (_e) {
-            return { date: "---", time: "---" };
-        }
-    };
-
-    // Status config
-    const statusConfig = {
-        pending: {
-            label: "قيد الانتظار",
-            bg: "#FEF3C7",
-            text: "#92400E",
-            border: "#FCD34D",
-            icon: "schedule",
-        },
-        confirmed: {
-            label: "مؤكد",
-            bg: "#DBEAFE",
-            text: "#1E40AF",
-            border: "#93C5FD",
-            icon: "check-circle",
-        },
-        completed: {
-            label: "مكتمل",
-            bg: "#D1FAE5",
-            text: "#065F46",
-            border: "#6EE7B7",
-            icon: "check-circle",
-        },
-        cancelled: {
-            label: "ملغي",
-            bg: "#FEE2E2",
-            text: "#991B1B",
-            border: "#FCA5A5",
-            icon: "cancel",
-        },
-    };
+    useEffect(() => { fetchBookings(); }, []);
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={['top']}>
+            <SafeAreaView style={styles.safe} edges={['top']}>
                 <View style={styles.loadingContainer}>
-                    <Icon name="history" type="material" size={48} color="#D1D5DB" />
+                    <ActivityIndicator size="large" color="#007AFF" />
                     <Text style={styles.loadingText}>جارٍ التحميل...</Text>
                 </View>
             </SafeAreaView>
@@ -116,346 +84,339 @@ function History() {
     }
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <ScrollView 
-                style={styles.container}
-                contentContainerStyle={styles.contentContainer}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
+        <SafeAreaView style={styles.safe} edges={['top']}>
+            <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#007AFF" />}
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.headerContent}>
-                        <Icon name="history" type="material" size={28} color="#111827" />
-                        <Text style={styles.headerTitle}>سجل الحجوزات</Text>
+                    <View style={styles.headerLeft}>
+                        <View style={styles.headerIconCircle}>
+                            <Icon name="history" type="material" size={20} color="#fff" />
+                        </View>
+                        <Text style={styles.headerTitle}>{isWasher ? 'سجل الطلبات' : 'حجوزاتي'}</Text>
                     </View>
-                    <View style={styles.bookingCount}>
-                        <Text style={styles.bookingCountText}>{bookings.length}</Text>
+                    <View style={styles.countBadge}>
+                        <Text style={styles.countText}>{bookings.length}</Text>
                     </View>
                 </View>
 
-                {/* Bookings List */}
+                {/* Empty state */}
                 {bookings.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Icon name="event-busy" type="material" size={64} color="#D1D5DB" />
+                        <View style={styles.emptyIconCircle}>
+                            <Icon name="event-busy" type="material" size={36} color="#9CA3AF" />
+                        </View>
                         <Text style={styles.emptyTitle}>لا توجد حجوزات</Text>
-                        <Text style={styles.emptyText}>ليس لديك أي حجوزات حتى الآن</Text>
+                        <Text style={styles.emptySubtitle}>ليس لديك أي حجوزات حتى الآن</Text>
                     </View>
                 ) : (
                     bookings.map((booking) => {
                         const { date, time } = formatDateTime(booking.scheduled_time);
                         const status = statusConfig[booking.status] || statusConfig.pending;
-                        
-                        // Get appropriate info based on user role
-                        const displayName = isWasher 
-                            ? booking.user_profile?.name 
+
+                        const displayName = isWasher
+                            ? booking.user_profile?.name
                             : booking.wash_service?.washer_profile?.display_name;
-                        const displayAddress = isWasher 
-                            ? null 
-                            : booking.wash_service?.washer_profile?.address;
-                        const displayPhone = isWasher 
-                            ? booking.user_profile?.mobile_number 
-                            : null;
+                        const displayAddress = isWasher ? null : booking.wash_service?.washer_profile?.address;
+                        const displayPhone = isWasher ? booking.user_profile?.mobile_number : null;
                         const serviceName = booking.wash_service?.name;
                         const servicePrice = booking.wash_service?.price;
                         const serviceDuration = booking.wash_service?.duration_minutes;
 
                         return (
-                            <Pressable key={booking.id} style={styles.bookingCard}>
-                                {/* Status Badge */}
-                                <View style={[styles.statusBadge, { 
-                                    backgroundColor: status.bg, 
-                                    borderColor: status.border 
-                                }]}>
-                                    <Icon 
-                                        name={status.icon} 
-                                        type="material" 
-                                        size={16} 
-                                        color={status.text} 
-                                    />
-                                    <Text style={[styles.statusText, { color: status.text }]}>
-                                        {status.label}
-                                    </Text>
-                                </View>
+                            <Pressable key={booking.id} style={styles.card}>
 
-                                {/* Main Info - Washer or Customer based on role */}
-                                <View style={styles.mainSection}>
-                                    <Icon 
-                                        name={isWasher ? "person" : "store"} 
-                                        type="material" 
-                                        size={24} 
-                                        color="#007AFF" 
-                                    />
-                                    <View style={styles.mainInfo}>
-                                        <Text style={styles.mainName}>{displayName || "غير متوفر"}</Text>
-                                        {displayAddress && (
-                                            <Text style={styles.subInfo}>{displayAddress}</Text>
-                                        )}
-                                        {displayPhone && (
-                                            <Text style={styles.subInfo}>{displayPhone}</Text>
-                                        )}
+                                {/* Top row: status + ID */}
+                                <View style={styles.cardTop}>
+                                    <Text style={styles.bookingId}>#{booking.id}</Text>
+                                    <View style={[styles.statusBadge, { backgroundColor: status.bg, borderColor: status.border }]}>
+                                        <Icon name={status.icon} type="material" size={13} color={status.text} />
+                                        <Text style={[styles.statusText, { color: status.text }]}>{status.label}</Text>
                                     </View>
                                 </View>
 
-                                {/* Service Details */}
-                                <View style={styles.serviceSection}>
-                                    <View style={styles.infoRow}>
-                                        <Icon name="local-car-wash" type="material" size={20} color="#6B7280" />
-                                        <Text style={styles.serviceName}>{serviceName || "غير محدد"}</Text>
+                                {/* Person / Washer */}
+                                <View style={styles.personRow}>
+                                    <View style={styles.personInfo}>
+                                        <Text style={styles.personName}>{displayName || "غير متوفر"}</Text>
+                                        {displayAddress && <Text style={styles.personSub}>{displayAddress}</Text>}
+                                        {displayPhone && <Text style={styles.personSub}>{displayPhone}</Text>}
                                     </View>
-                                    
-                                    <View style={styles.serviceDetails}>
-                                        {servicePrice && (
-                                            <View style={styles.detailChip}>
-                                                <Icon name="payments" type="material" size={16} color="#059669" />
-                                                <Text style={styles.detailText}>{servicePrice} nis</Text>
-                                            </View>
-                                        )}
+                                    <View style={styles.personIconCircle}>
+                                        <Icon name={isWasher ? "person" : "store"} type="material" size={20} color="#007AFF" />
+                                    </View>
+                                </View>
+
+                                {/* Service row */}
+                                <View style={styles.divider} />
+                                <View style={styles.serviceRow}>
+                                    <View style={styles.chips}>
                                         {serviceDuration && (
-                                            <View style={styles.detailChip}>
-                                                <Icon name="timer" type="material" size={16} color="#7C3AED" />
-                                                <Text style={styles.detailText}>{serviceDuration} دقيقة</Text>
+                                            <View style={[styles.chip, styles.chipPurple]}>
+                                                <Icon name="timer" type="material" size={13} color="#7C3AED" />
+                                                <Text style={[styles.chipText, { color: "#7C3AED" }]}>{serviceDuration} د</Text>
+                                            </View>
+                                        )}
+                                        {servicePrice && (
+                                            <View style={[styles.chip, styles.chipGreen]}>
+                                                <Icon name="payments" type="material" size={13} color="#059669" />
+                                                <Text style={[styles.chipText, { color: "#059669" }]}>{servicePrice} nis</Text>
                                             </View>
                                         )}
                                     </View>
+                                    <Text style={styles.serviceName}>{serviceName || "غير محدد"}</Text>
                                 </View>
 
-                                {/* Scheduled Time */}
-                                <View style={styles.timeSection}>
-                                    <View style={styles.timeRow}>
-                                        <Icon name="event" type="material" size={18} color="#6B7280" />
-                                        <View style={styles.timeContent}>
-                                            <Text style={styles.timeLabel}>التاريخ:</Text>
-                                            <Text style={styles.timeValue}>{date}</Text>
-                                        </View>
+                                {/* Date / Time */}
+                                <View style={styles.timeRow}>
+                                    <View style={styles.timeItem}>
+                                        <Icon name="access-time" type="material" size={14} color="#9CA3AF" />
+                                        <Text style={styles.timeText}>{time}</Text>
                                     </View>
-                                    <View style={styles.timeRow}>
-                                        <Icon name="access-time" type="material" size={18} color="#6B7280" />
-                                        <View style={styles.timeContent}>
-                                            <Text style={styles.timeLabel}>الوقت:</Text>
-                                            <Text style={styles.timeValue}>{time}</Text>
-                                        </View>
+                                    <View style={styles.timeItem}>
+                                        <Icon name="event" type="material" size={14} color="#9CA3AF" />
+                                        <Text style={styles.timeText}>{date}</Text>
                                     </View>
                                 </View>
 
-                                {/* Booking ID */}
-                                <View style={styles.bookingFooter}>
-                                    <Text style={styles.bookingId}>رقم الحجز: #{booking.id}</Text>
-                                </View>
                             </Pressable>
                         );
                     })
                 )}
 
-                <View style={styles.bottomSpacer} />
+                <View style={{ height: 100 }} />
             </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    safe: {
         flex: 1,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: '#F0F6FF',
     },
-    container: {
+    scroll: {
         flex: 1,
-        backgroundColor: "#F9FAFB",
     },
-    contentContainer: {
-        padding: 16,
-        paddingTop: 20,
+    content: {
+        paddingHorizontal: 20,
+        paddingBottom: 20,
     },
     loadingContainer: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 16,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: "#6B7280",
-        fontWeight: "600",
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20,
-        paddingBottom: 16,
-        borderBottomWidth: 2,
-        borderBottomColor: "#E5E7EB",
-    },
-    headerContent: {
-        flexDirection: "row",
-        alignItems: "center",
+        justifyContent: 'center',
+        alignItems: 'center',
         gap: 12,
     },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: "800",
-        color: "#111827",
+    loadingText: {
+        fontSize: 15,
+        color: '#6B7280',
+        fontWeight: '500',
     },
-    bookingCount: {
-        backgroundColor: "#007AFF",
+
+    // Header
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingTop: 28,
+        paddingBottom: 20,
+    },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    headerIconCircle: {
         width: 36,
         height: 36,
         borderRadius: 18,
-        justifyContent: "center",
-        alignItems: "center",
-        shadowColor: "#007AFF",
+        backgroundColor: '#007AFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    countBadge: {
+        backgroundColor: '#007AFF',
+        minWidth: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        shadowColor: '#007AFF',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 3,
     },
-    bookingCountText: {
-        fontSize: 16,
-        fontWeight: "800",
-        color: "#FFFFFF",
+    countText: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: '#fff',
     },
+
+    // Empty
     emptyState: {
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: 'center',
         paddingVertical: 80,
         gap: 12,
     },
+    emptyIconCircle: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#374151",
-        marginTop: 16,
-    },
-    emptyText: {
-        fontSize: 15,
-        color: "#6B7280",
-    },
-    bookingCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 20,
-        padding: 18,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-        gap: 14,
-    },
-    statusBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        borderWidth: 2,
-        gap: 6,
-    },
-    statusText: {
-        fontSize: 13,
-        fontWeight: "800",
-    },
-    mainSection: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#F3F4F6",
-    },
-    mainInfo: {
-        flex: 1,
-        gap: 4,
-    },
-    mainName: {
         fontSize: 18,
-        fontWeight: "800",
-        color: "#111827",
+        fontWeight: '700',
+        color: '#374151',
     },
-    subInfo: {
-        fontSize: 13,
-        fontWeight: "500",
-        color: "#6B7280",
-    },
-    serviceSection: {
-        gap: 10,
-    },
-    infoRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-    },
-    serviceName: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#374151",
-        flex: 1,
-    },
-    serviceDetails: {
-        flexDirection: "row",
-        gap: 8,
-        flexWrap: "wrap",
-    },
-    detailChip: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#F9FAFB",
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 12,
-        gap: 4,
-        borderWidth: 1,
-        borderColor: "#E5E7EB",
-    },
-    detailText: {
-        fontSize: 13,
-        fontWeight: "700",
-        color: "#374151",
-    },
-    timeSection: {
-        backgroundColor: "#F9FAFB",
-        borderRadius: 12,
-        padding: 12,
-        gap: 8,
-    },
-    timeRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-    },
-    timeContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        flex: 1,
-    },
-    timeLabel: {
+    emptySubtitle: {
         fontSize: 14,
-        fontWeight: "600",
-        color: "#6B7280",
+        color: '#9CA3AF',
+        fontWeight: '500',
     },
-    timeValue: {
-        fontSize: 14,
-        fontWeight: "700",
-        color: "#111827",
-        flex: 1,
+
+    // Card
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        elevation: 3,
+        gap: 12,
     },
-    bookingFooter: {
-        paddingTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: "#F3F4F6",
+    cardTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     bookingId: {
         fontSize: 12,
-        fontWeight: "600",
-        color: "#9CA3AF",
-        textAlign: "center",
+        fontWeight: '600',
+        color: '#9CA3AF',
     },
-    bottomSpacer: {
-        height: 100,
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    statusText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+
+    // Person
+    personRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    personIconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#EFF6FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    personInfo: {
+        flex: 1,
+        alignItems: 'flex-end',
+        gap: 2,
+    },
+    personName: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+        textAlign: 'right',
+    },
+    personSub: {
+        fontSize: 12,
+        color: '#6B7280',
+        fontWeight: '500',
+        textAlign: 'right',
+    },
+
+    divider: {
+        height: 1,
+        backgroundColor: '#F3F4F6',
+    },
+
+    // Service
+    serviceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    serviceName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#374151',
+        textAlign: 'right',
+        flex: 1,
+    },
+    chips: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+        borderWidth: 1,
+    },
+    chipGreen: {
+        backgroundColor: '#ECFDF5',
+        borderColor: '#A7F3D0',
+    },
+    chipPurple: {
+        backgroundColor: '#F5F3FF',
+        borderColor: '#DDD6FE',
+    },
+    chipText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+
+    // Time
+    timeRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 16,
+    },
+    timeItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    timeText: {
+        fontSize: 12,
+        color: '#6B7280',
+        fontWeight: '500',
     },
 });
-
-export default History;

@@ -1,22 +1,22 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import { useAuth } from '../Context/AuthContext';
-import { useLocalSearchParams, router } from 'expo-router';
-import WasherInfoCard from '../Components/Booking/WasherInfoCard';
+import ConfirmButton from '../Components/Booking/ConfirmButton';
+import DatePicker from '../Components/Booking/DatePicker';
+import ErrorState from '../Components/Booking/ErrorState';
+import LoadingState from '../Components/Booking/LoadingState';
 import ServiceCards from '../Components/Booking/ServiceCards';
 import TimeSlotGrid from '../Components/Booking/TimeSlotGrid';
-import DatePicker from '../Components/Booking/DatePicker';
-import LoadingState from '../Components/Booking/LoadingState';
-import ErrorState from '../Components/Booking/ErrorState';
-import BookingHeader from '../Components/Booking/BookingHeader';
-import ConfirmButton from '../Components/Booking/ConfirmButton';
+import { useAuth } from '../Context/AuthContext';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 function BookingPage() {
     const { user } = useAuth();
     const { washerId } = useLocalSearchParams();
+
     
     const [washerDetails, setWasherDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -133,9 +133,13 @@ function BookingPage() {
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-                <BookingHeader />
-
-                <WasherInfoCard address={washerDetails.address} display_name={washerDetails.display_name} />
+                <View style={styles.navbar}>
+                    <Pressable style={styles.backBtn} onPress={() => router.replace('/(main)/MapPage')}>
+                        <Icon name="arrow-forward-ios" type="material" size={18} color="#007AFF" />
+                    </Pressable>
+                    <Text style={styles.navTitle}>حجز موعد</Text>
+                    <View style={styles.navSpacer} />
+                </View>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>اختر الخدمة</Text>
@@ -173,29 +177,58 @@ function BookingPage() {
             </ScrollView>
         </SafeAreaView>
     );
+
 }
 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: '#F0F6FF',
     },
     container: {
         flex: 1,
-        backgroundColor: "#F9FAFB",
+        backgroundColor: '#F0F6FF',
     },
     contentContainer: {
         padding: 16,
-        paddingTop: 20,
+        paddingTop: 8,
+    },
+    navbar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        marginBottom: 8,
+    },
+    backBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    navTitle: {
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    navSpacer: {
+        width: 36,
     },
     section: {
         marginBottom: 24,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: "800",
-        color: "#111827",
-        marginBottom: 16,
+        fontSize: 17,
+        fontWeight: '800',
+        color: '#111827',
+        marginBottom: 12,
     },
     bottomSpacer: {
         height: 100,

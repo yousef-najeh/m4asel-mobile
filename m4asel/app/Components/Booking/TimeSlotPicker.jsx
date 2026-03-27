@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ActivityIndicator, StyleSheet } from "react-native";
 import { Icon } from 'react-native-elements';
+import { formatTime } from '../../utils/helpers';
 
 function TimeSlotPicker({ 
     availableTimes, 
@@ -8,16 +9,6 @@ function TimeSlotPicker({
     loading, 
     selectedDate 
 }) {
-    const formatTime = (isoString) => {
-        try {
-            const date = new Date(isoString);
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${hours}:${minutes}`;
-        } catch (e) {
-            return isoString;
-        }
-    };
 
     if (loading) {
         return (

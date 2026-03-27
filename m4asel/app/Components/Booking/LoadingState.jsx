@@ -1,9 +1,9 @@
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-function LoadingState() {
+export default function LoadingState() {
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.container}>
                 <ActivityIndicator size="large" color="#007AFF" />
                 <Text style={styles.text}>جارٍ التحميل...</Text>
@@ -13,21 +13,7 @@ function LoadingState() {
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: "#F9FAFB",
-    },
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 16,
-    },
-    text: {
-        fontSize: 16,
-        color: "#6B7280",
-        fontWeight: "600",
-    },
+    safe: { flex: 1, backgroundColor: '#F0F6FF' },
+    container: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+    text: { fontSize: 15, color: '#6B7280', fontWeight: '500' },
 });
-
-export default LoadingState;
