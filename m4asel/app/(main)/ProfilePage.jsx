@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
+import { deleteFcmToken } from "../utils/fcm";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ const ProfilePage = () => {
 
   const handleLogout = async () => {
     try {
+      await deleteFcmToken(user);
       await signOut(auth);
       router.replace("/(auth)/Login");
     } catch (error) {

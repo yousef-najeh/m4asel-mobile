@@ -3,6 +3,7 @@
 import { onAuthStateChanged } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../../util/fireBaseConfig";
+import { registerFcmToken } from "../utils/fcm";
 
 export const AuthContext = createContext();
 
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }) => {
 
             if (firebaseUser) {
                 await fetchProfile(firebaseUser);
+                registerFcmToken(firebaseUser);
             } else {
                 setProfile(null);
                 setError(null);
