@@ -1,13 +1,54 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ServiceFormModal from "../Components/ServiceFormModal";
 import { useAuth } from "../Context/AuthContext";
 import { formatTime } from "../utils/helpers";
 
+const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+
 export default function WasherDetails() {
-    const { washerProfile, loading } = useAuth();
+    const { washerProfile, loading, user, refreshProfile } = useAuth();
     const router = useRouter();
+    const [modalVisible, setModalVisible] = useState(false);
+    const [editingService, setEditingService] = useState(null);
+
+    const openAdd = () => { setEditingService(null); setModalVisible(true); };
+    const openEdit = (s) => { setEditingService(s); setModalVisible(true); };
+    const closeModal = () => setModalVisible(false);
+
+    const handleSaved = async () => {
+        closeModal();
+        await refreshProfile();
+    };
+
+    const handleDelete = (service) => {
+        Alert.alert(
+            'حذف الخدمة',
+            `هل تريد حذف "${service.name}"؟`,
+            [
+                { text: 'إلغاء', style: 'cancel' },
+                {
+                    text: 'حذف', style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await user.getIdToken();
+                            const response = await fetch(`${apiUrl}/washers/services/${service.id}`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Bearer ${token}` },
+                            });
+                            if (!response.ok) throw new Error();
+                            await refreshProfile();
+                        } catch {
+                            Alert.alert('خطأ', 'فشل حذف الخدمة، حاول مجدداً');
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     if (loading) {
         return (
@@ -96,6 +137,11 @@ export default function WasherDetails() {
                 {/* ── Services ── */}
                 <View style={styles.card}>
                     <View style={styles.cardTitleRow}>
+                        <Pressable style={styles.addServiceBtn} onPress={openAdd}>
+                            <Icon name="add" type="material" size={16} color="#007AFF" />
+                            <Text style={styles.addServiceText}>إضافة</Text>
+                        </Pressable>
+                        <View style={{ flex: 1 }} />
                         <View style={styles.countPill}>
                             <Text style={styles.countPillText}>{services.length}</Text>
                         </View>
@@ -109,33 +155,53 @@ export default function WasherDetails() {
                         </View>
                     ) : (
                         services.map((s, i) => (
-                            <View key={i} style={[styles.serviceCard, i < services.length - 1 && styles.serviceCardBorder]}>
+                            <View key={s.id ?? i} style={[styles.serviceCard, i < services.length - 1 && styles.serviceCardBorder, !s.is_active && styles.serviceCardInactive]}>
                                 <View style={styles.serviceTop}>
-                                    <View style={styles.serviceChips}>
-                                        <View style={styles.chipPurple}>
-                                            <Icon name="timer" type="material" size={12} color="#7C3AED" />
-                                            <Text style={[styles.chipText, { color: '#7C3AED' }]}>{s.duration_minutes} د</Text>
+                                    <View style={styles.serviceActions}>
+                                        <Pressable style={styles.actionBtn} onPress={() => handleDelete(s)}>
+                                            <Icon name="delete-outline" type="material" size={18} color="#EF4444" />
+                                        </Pressable>
+                                        <Pressable style={styles.actionBtn} onPress={() => openEdit(s)}>
+                                            <Icon name="edit" type="material" size={18} color="#007AFF" />
+                                        </Pressable>
+                                    </View>
+                                    <View style={styles.serviceInfo}>
+                                        <View style={styles.serviceNameRow}>
+                                            {!s.is_active && (
+                                                <View style={styles.inactiveBadge}>
+                                                    <Text style={styles.inactiveBadgeText}>معطّل</Text>
+                                                </View>
+                                            )}
+                                            <Text style={[styles.serviceName, !s.is_active && styles.serviceNameInactive]}>{s.name}</Text>
                                         </View>
-                                        <View style={styles.chipGreen}>
-                                            <Icon name="payments" type="material" size={12} color="#059669" />
-                                            <Text style={[styles.chipText, { color: '#059669' }]}>{s.price} nis</Text>
+                                        <View style={styles.serviceChips}>
+                                            <View style={styles.chipPurple}>
+                                                <Icon name="timer" type="material" size={12} color="#7C3AED" />
+                                                <Text style={[styles.chipText, { color: '#7C3AED' }]}>{s.duration_minutes} د</Text>
+                                            </View>
+                                            <View style={styles.chipGreen}>
+                                                <Icon name="payments" type="material" size={12} color="#059669" />
+                                                <Text style={[styles.chipText, { color: '#059669' }]}>{s.price} nis</Text>
+                                            </View>
                                         </View>
                                     </View>
-                                    <Text style={styles.serviceName}>{s.name}</Text>
                                 </View>
                             </View>
                         ))
                     )}
                 </View>
 
-                {/* ── Edit action ── */}
-                <Pressable style={styles.editBtn} onPress={() => { }}>
-                    <Icon name="edit" type="material" size={18} color="#007AFF" />
-                    <Text style={styles.editBtnText}>تعديل بيانات المغسلة</Text>
-                </Pressable>
-
                 <View style={{ height: 32 }} />
             </ScrollView>
+
+            <ServiceFormModal
+                visible={modalVisible}
+                service={editingService}
+                washerId={washerProfile?.id}
+                user={user}
+                onClose={closeModal}
+                onSaved={handleSaved}
+            />
         </SafeAreaView>
     );
 }
@@ -239,9 +305,33 @@ const styles = StyleSheet.create({
     noServicesText: { fontSize: 14, color: '#9CA3AF', fontWeight: '500' },
     serviceCard: { paddingVertical: 14 },
     serviceCardBorder: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-    serviceTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    serviceName: { fontSize: 15, fontWeight: '700', color: '#111827', flex: 1, textAlign: 'right' },
+    serviceCardInactive: { opacity: 0.5 },
+    serviceTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+    serviceInfo: { flex: 1, alignItems: 'flex-end', gap: 6 },
+    serviceNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'flex-end' },
+    serviceName: { fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'right' },
+    serviceNameInactive: { color: '#9CA3AF' },
+    inactiveBadge: {
+        backgroundColor: '#FEF2F2', borderRadius: 6,
+        paddingHorizontal: 7, paddingVertical: 2,
+        borderWidth: 1, borderColor: '#FECACA',
+    },
+    inactiveBadgeText: { fontSize: 11, fontWeight: '700', color: '#EF4444' },
     serviceChips: { flexDirection: 'row', gap: 6 },
+    serviceActions: { flexDirection: 'row', gap: 6 },
+    actionBtn: {
+        width: 34, height: 34, borderRadius: 10,
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1, borderColor: '#E5E7EB',
+        justifyContent: 'center', alignItems: 'center',
+    },
+    addServiceBtn: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: '#EFF6FF', borderRadius: 8,
+        paddingHorizontal: 10, paddingVertical: 5,
+        borderWidth: 1, borderColor: '#BFDBFE',
+    },
+    addServiceText: { fontSize: 13, fontWeight: '700', color: '#007AFF' },
     chipGreen: {
         flexDirection: 'row', alignItems: 'center', gap: 4,
         backgroundColor: '#ECFDF5', borderRadius: 8,
@@ -256,11 +346,4 @@ const styles = StyleSheet.create({
     },
     chipText: { fontSize: 12, fontWeight: '700' },
 
-    // Edit
-    editBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        backgroundColor: '#EFF6FF', borderRadius: 16,
-        paddingVertical: 15, borderWidth: 1.5, borderColor: '#BFDBFE',
-    },
-    editBtnText: { fontSize: 15, fontWeight: '700', color: '#007AFF' },
 });

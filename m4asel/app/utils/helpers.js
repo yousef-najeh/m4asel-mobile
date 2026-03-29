@@ -20,6 +20,20 @@ export const formatTime = (input) => {
     }
 };
 
+export const formatDateTime = (isoString) => {
+    if (!isoString) return { date: '---', time: '---' };
+    try {
+        const d = new Date(isoString);
+        const months = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        const date = `${d.getDate()} ${months[d.getMonth()]}`;
+        let h = d.getHours();
+        const m = String(d.getMinutes()).padStart(2, '0');
+        const ampm = h >= 12 ? 'م' : 'ص';
+        h = h % 12 || 12;
+        return { date, time: `${h}:${m} ${ampm}` };
+    } catch { return { date: '---', time: '---' }; }
+};
+
 export const formatDistance = (km) => {
     if (!km && km !== 0) return null;
     return km < 1 ? `${(km * 1000).toFixed(0)} م` : `${km.toFixed(1)} كم`;
