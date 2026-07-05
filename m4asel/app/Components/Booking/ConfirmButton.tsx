@@ -1,7 +1,13 @@
 import { Pressable, Text, ActivityIndicator, StyleSheet, View } from "react-native";
 import { Icon } from 'react-native-elements';
 
-export default function ConfirmButton({ onConfirm, disabled, loading }) {
+interface ConfirmButtonProps {
+    onConfirm: () => void;
+    disabled?: boolean;
+    loading?: boolean;
+}
+
+export default function ConfirmButton({ onConfirm, disabled, loading }: ConfirmButtonProps) {
     return (
         <Pressable
             style={[styles.btn, disabled && styles.btnDisabled]}

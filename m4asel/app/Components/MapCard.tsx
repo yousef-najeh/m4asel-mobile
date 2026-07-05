@@ -8,13 +8,17 @@ import {
 } from "react-native";
 import { Icon } from 'react-native-elements';
 import { formatDistance, formatTime } from '../utils/helpers';
+import type { Washer } from '@/types/api';
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = WINDOW_WIDTH * 0.82;
 const MINUTE_MS = 60000;
 
+interface MapCardProps {
+    item: Washer;
+}
 
-export default function MapCard({ item }) {
+export default function MapCard({ item }: MapCardProps) {
     const [minutesElapsed, setMinutesElapsed] = useState(0);
 
     useEffect(() => {
@@ -22,7 +26,7 @@ export default function MapCard({ item }) {
         return () => clearInterval(interval);
     }, []);
 
-    const getAdjustedTime = (isoString) => {
+    const getAdjustedTime = (isoString?: string | null): string => {
         if (!isoString) return "غير متاح";
         try {
             const t = new Date(isoString);
