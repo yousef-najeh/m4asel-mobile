@@ -1,7 +1,14 @@
 import { Pressable, View, Text, StyleSheet } from "react-native";
 import { Icon } from 'react-native-elements';
+import type { WashService } from '@/types/api';
 
-export default function ServiceCard({ service, isSelected, onSelect }) {
+interface ServiceCardProps {
+    service: WashService;
+    isSelected: boolean;
+    onSelect: (service: WashService) => void;
+}
+
+export default function ServiceCard({ service, isSelected, onSelect }: ServiceCardProps) {
     return (
         <Pressable
             style={[styles.card, isSelected && styles.cardSelected]}

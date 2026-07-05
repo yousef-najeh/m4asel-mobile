@@ -2,7 +2,11 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from 'react-native-elements';
 
-function ErrorState({ onRetry }) {
+interface ErrorStateProps {
+    onRetry: () => void;
+}
+
+function ErrorState({ onRetry }: ErrorStateProps) {
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <View style={styles.container}>

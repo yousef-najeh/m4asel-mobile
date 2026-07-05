@@ -3,9 +3,14 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 const DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const MONTHS = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
-const toISO = (date) => date.toISOString().split('T')[0];
+const toISO = (date: Date) => date.toISOString().split('T')[0];
 
-export default function DatePicker({ selectedDate, onSelectDate }) {
+interface DatePickerProps {
+    selectedDate: string;
+    onSelectDate: (iso: string) => void;
+}
+
+export default function DatePicker({ selectedDate, onSelectDate }: DatePickerProps) {
     const dates = Array.from({ length: 7 }, (_, i) => {
         const d = new Date();
         d.setDate(d.getDate() + i);

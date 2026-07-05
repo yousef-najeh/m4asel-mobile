@@ -1,14 +1,22 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 
-export default function TabButton({ route, currentRoute, iconName, iconType = "material", label }) {
+interface TabButtonProps {
+  route: string;
+  currentRoute: string;
+  iconName: string;
+  iconType?: string;
+  label: string;
+}
+
+export default function TabButton({ route, currentRoute, iconName, iconType = "material", label }: TabButtonProps) {
   const isActive = currentRoute === route.split('/').pop();
 
   return (
     <Pressable
-      onPress={() => router.replace(route)}
+      onPress={() => router.replace(route as Href)}
       style={styles.tabButton}
     >
       <View style={[
