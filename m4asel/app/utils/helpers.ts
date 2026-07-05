@@ -1,8 +1,8 @@
 // Accepts full ISO datetime ("2024-01-15T09:00:00Z") or time string ("09:00:00" / "09:00:00.000Z")
-export const formatTime = (input) => {
+export const formatTime = (input?: string | null): string => {
     if (!input) return 'غير محدد';
     try {
-        let h, m;
+        let h: number, m: number;
         if (input.includes('T')) {
             const d = new Date(input);
             h = d.getHours();
@@ -20,7 +20,7 @@ export const formatTime = (input) => {
     }
 };
 
-export const formatDateTime = (isoString) => {
+export const formatDateTime = (isoString?: string | null): { date: string; time: string } => {
     if (!isoString) return { date: '---', time: '---' };
     try {
         const d = new Date(isoString);
@@ -34,7 +34,7 @@ export const formatDateTime = (isoString) => {
     } catch { return { date: '---', time: '---' }; }
 };
 
-export const formatDistance = (km) => {
-    if (!km && km !== 0) return null;
+export const formatDistance = (km?: number | null): string | null => {
+    if (km == null) return null;
     return km < 1 ? `${(km * 1000).toFixed(0)} م` : `${km.toFixed(1)} كم`;
 };
