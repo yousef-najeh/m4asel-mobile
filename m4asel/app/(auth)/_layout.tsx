@@ -1,9 +1,9 @@
 
-import { Redirect,Stack } from "expo-router";
+import { Redirect,Stack, type Href } from "expo-router";
 import { useAuth } from "../Context/AuthContext";   // adjust path if needed
 import {UserRole} from '../../constants/UserRole';
 
-const roleRedirectMap = {
+const roleRedirectMap: Partial<Record<UserRole, Href>> = {
   [UserRole.WASHER_OWNER]: "/(main)/Bookings",
   [UserRole.WASHER_WORKER]: "/(main)/Bookings",
   [UserRole.CONFIRMED_USER]: "/(main)/MapPage",
@@ -13,7 +13,8 @@ const roleRedirectMap = {
 export default function AuthLayout() {
   const { user, loading,role } = useAuth();
   if (!loading && user) {
-    return <Redirect href={roleRedirectMap[role] || "/(main)/ProfilePage"} />;
+    const target: Href = (role && roleRedirectMap[role]) || "/(main)/ProfilePage";
+    return <Redirect href={target} />;
   }
 
   return (

@@ -1,8 +1,14 @@
 import { Button, ButtonText } from '@/components/ui/button';
 import { router } from 'expo-router';
+import { FirebaseError } from 'firebase/app';
 import { AuthErrorCodes, signInWithEmailAndPassword } from 'firebase/auth';
-import { Formik } from 'formik';
+import { Formik, type FormikHelpers } from 'formik';
 import { useState } from 'react';
+
+interface LoginValues {
+    email: string;
+    password: string;
+}
 import {
     ActivityIndicator,
     Image, Keyboard, KeyboardAvoidingView, Platform,
@@ -16,7 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Yup from 'yup';
 import { auth } from '../../util/fireBaseConfig';
 
-const authErrorMessages = {
+const authErrorMessages: Record<string, string> = {
     [AuthErrorCodes.USER_DELETED]: 'لا يوجد حساب بهذا البريد الإلكتروني',
     [AuthErrorCodes.INVALID_PASSWORD]: 'كلمة المرور غير صحيحة',
     [AuthErrorCodes.INVALID_LOGIN_CREDENTIALS]: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
@@ -36,12 +42,13 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [firebaseError, setFirebaseError] = useState('');
 
-    const handleLogin = async (values, { setSubmitting }) => {
+    const handleLogin = async (values: LoginValues, { setSubmitting }: FormikHelpers<LoginValues>) => {
         setFirebaseError('');
         try {
             await signInWithEmailAndPassword(auth, values.email, values.password);
         } catch (error) {
-            setFirebaseError(authErrorMessages[error?.code] || 'حدث خطأ، حاول مجدداً');
+            const code = error instanceof FirebaseError ? error.code : undefined;
+            setFirebaseError((code && authErrorMessages[code]) || 'حدث خطأ، حاول مجدداً');
         } finally {
             setSubmitting(false);
         }
@@ -67,7 +74,7 @@ export default function Login() {
 
                         {/* ── Form Card ── */}
                         <View style={styles.card}>
-                            <Formik
+                            <Formik<LoginValues>
                                 initialValues={{ email: '', password: '' }}
                                 validationSchema={schema}
                                 onSubmit={handleLogin}
@@ -136,7 +143,7 @@ export default function Login() {
                                         {/* Submit */}
                                         <Button
                                             style={styles.submitBtn}
-                                            onPress={handleSubmit}
+                                            onPress={() => handleSubmit()}
                                             isDisabled={isSubmitting}
                                         >
                                             {isSubmitting

@@ -33,7 +33,7 @@ const ProfilePage = () => {
   const userName = profile?.name || user?.displayName || "مستخدم";
   const userMobile = profile?.mobile_number || "غير متوفر";
 
-  const roleLabels = {
+  const roleLabels: Record<UserRole, string> = {
     [UserRole.ADMIN]: "مدير النظام",
     [UserRole.CONFIRMED_USER]: "مستخدم مؤكد",
     [UserRole.UNCONFIRMED_USER]: "مستخدم غير مؤكد",
@@ -55,7 +55,7 @@ const ProfilePage = () => {
           </View>
           <Text style={styles.userName}>{userName}</Text>
           <View style={styles.roleBadge}>
-            <Text style={styles.roleText}>{roleLabels[role] || "مستخدم"}</Text>
+            <Text style={styles.roleText}>{(role && roleLabels[role]) || "مستخدم"}</Text>
           </View>
         </View>
 
@@ -111,7 +111,14 @@ const ProfilePage = () => {
   );
 };
 
-const InfoRow = ({ icon, label, value, last }) => (
+interface InfoRowProps {
+  icon: string;
+  label: string;
+  value: string;
+  last?: boolean;
+}
+
+const InfoRow = ({ icon, label, value, last }: InfoRowProps) => (
   <View style={[styles.row, !last && styles.rowBorder]}>
     <Text style={styles.rowValue}>{value}</Text>
     <View style={styles.rowLeft}>
@@ -121,7 +128,14 @@ const InfoRow = ({ icon, label, value, last }) => (
   </View>
 );
 
-const ActionRow = ({ icon, label, onPress, last }) => (
+interface ActionRowProps {
+  icon: string;
+  label: string;
+  onPress: () => void;
+  last?: boolean;
+}
+
+const ActionRow = ({ icon, label, onPress, last }: ActionRowProps) => (
   <Pressable style={[styles.row, !last && styles.rowBorder]} onPress={onPress}>
     <Icon name="chevron-left" type="material" size={20} color="#D1D5DB" />
     <View style={styles.rowLeft}>
