@@ -2,8 +2,15 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { router } from 'expo-router';
 import { fetch } from 'expo/fetch';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Formik } from 'formik';
+import { Formik, type FormikHelpers } from 'formik';
 import { useState } from 'react';
+
+interface SignUpValues {
+  name: string;
+  email: string;
+  mobile_number: string;
+  password: string;
+}
 import {
   ActivityIndicator,
   Image, Keyboard, KeyboardAvoidingView, Platform,
@@ -39,7 +46,7 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const handleSignUp = async (values, { setSubmitting }) => {
+  const handleSignUp = async (values: SignUpValues, { setSubmitting }: FormikHelpers<SignUpValues>) => {
     setServerError('');
     try {
       const response = await fetch(`${apiUrl}/users/register`, {
@@ -89,7 +96,7 @@ export default function SignUp() {
 
           {/* ── Form Card ── */}
           <View style={styles.card}>
-            <Formik
+            <Formik<SignUpValues>
               initialValues={{ name: '', email: '', mobile_number: '', password: '' }}
               validationSchema={schema}
               onSubmit={handleSignUp}
@@ -199,7 +206,7 @@ export default function SignUp() {
                   {/* Submit */}
                   <Button
                     style={styles.submitBtn}
-                    onPress={handleSubmit}
+                    onPress={() => handleSubmit()}
                     isDisabled={isSubmitting}
                   >
                     {isSubmitting

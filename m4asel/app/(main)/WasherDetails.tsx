@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ServiceFormModal from "../Components/ServiceFormModal";
 import { useAuth } from "../Context/AuthContext";
 import { formatTime } from "../utils/helpers";
+import type { WashService } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -13,10 +14,10 @@ export default function WasherDetails() {
     const { washerProfile, loading, user, refreshProfile } = useAuth();
     const router = useRouter();
     const [modalVisible, setModalVisible] = useState(false);
-    const [editingService, setEditingService] = useState(null);
+    const [editingService, setEditingService] = useState<WashService | null>(null);
 
     const openAdd = () => { setEditingService(null); setModalVisible(true); };
-    const openEdit = (s) => { setEditingService(s); setModalVisible(true); };
+    const openEdit = (s: WashService) => { setEditingService(s); setModalVisible(true); };
     const closeModal = () => setModalVisible(false);
 
     const handleSaved = async () => {
@@ -24,7 +25,7 @@ export default function WasherDetails() {
         await refreshProfile();
     };
 
-    const handleDelete = (service) => {
+    const handleDelete = (service: WashService) => {
         Alert.alert(
             'حذف الخدمة',
             `هل تريد حذف "${service.name}"؟`,
@@ -34,6 +35,7 @@ export default function WasherDetails() {
                     text: 'حذف', style: 'destructive',
                     onPress: async () => {
                         try {
+                            if (!user) return;
                             const token = await user.getIdToken();
                             const response = await fetch(`${apiUrl}/washers/services/${service.id}`, {
                                 method: 'DELETE',
@@ -198,7 +200,7 @@ export default function WasherDetails() {
                 visible={modalVisible}
                 service={editingService}
                 washerId={washerProfile?.id}
-                user={user}
+                user={user!}
                 onClose={closeModal}
                 onSaved={handleSaved}
             />
@@ -206,7 +208,14 @@ export default function WasherDetails() {
     );
 }
 
-const InfoRow = ({ icon, label, value, last }) => (
+interface InfoRowProps {
+    icon: string;
+    label: string;
+    value: string;
+    last?: boolean;
+}
+
+const InfoRow = ({ icon, label, value, last }: InfoRowProps) => (
     <View style={[styles.row, !last && styles.rowBorder]}>
         <Text style={styles.rowValue}>{value}</Text>
         <View style={styles.rowLeft}>
