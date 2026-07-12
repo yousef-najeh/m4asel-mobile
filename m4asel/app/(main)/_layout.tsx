@@ -3,9 +3,9 @@
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, StyleSheet } from "react-native";
-import { useAuth } from "../Context/AuthContext";
-import TabButton from "../Components/TabButton";
-import { UserRole } from "../../constants/UserRole";
+import { useAuth } from "@/src/features/auth";
+import TabButton from "@/src/shared/components/TabButton";
+import { UserRole } from "@/src/constants/UserRole";
 
 const allTabs = [
   { route: "/(main)/ProfilePage", iconName: "person", label: "حسابك", showFor: "all" },
