@@ -4,9 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBookings, useUpdateBookingStatus } from '@/src/features/bookings/hooks/useBookings';
 import { formatDateTime } from "@/src/utils/helpers";
 import type { OrderStatus } from '@/types/api';
-import { styles } from "../styles/BookingsScreen.styles";
+import { styles } from "../styles/WasherBookingsScreen.styles";
 
-function Bookings() {
+function WasherBookingsScreen() {
     const { data, isLoading: loading, refetch, isRefetching: refreshing } = useBookings();
     const updateStatusMutation = useUpdateBookingStatus();
 
@@ -194,4 +194,4 @@ function Bookings() {
     );
 }
 
-export default Bookings;
+export default WasherBookingsScreen;

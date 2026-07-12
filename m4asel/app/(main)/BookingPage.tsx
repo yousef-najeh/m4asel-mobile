@@ -1,5 +1,5 @@
-import BookingPageScreen from "@/src/features/bookings/screens/BookingPageScreen";
+import UserBookingScreen from "@/src/features/bookings/screens/UserBookingScreen";
 
 export default function BookingPage() {
-  return <BookingPageScreen />;
+  return <UserBookingScreen />;
 }

@@ -1,5 +1,5 @@
-import BookingsScreen from "@/src/features/bookings/screens/BookingsScreen";
+import WasherBookingsScreen from "@/src/features/bookings/screens/WasherBookingsScreen";
 
 export default function Bookings() {
-  return <BookingsScreen />;
+  return <WasherBookingsScreen />;
 }

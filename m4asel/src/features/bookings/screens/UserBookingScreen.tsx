@@ -10,11 +10,11 @@ import TimeSlotGrid from '../components/TimeSlotGrid';
 import ErrorState from '@/src/shared/components/ErrorState';
 import LoadingState from '@/src/shared/components/LoadingState';
 import { useCreateBooking } from '@/src/features/bookings/hooks/useCreateBooking';
-import { styles } from "../styles/BookingPageScreen.styles";
+import { styles } from "../styles/UserBookingScreen.styles";
 import { useWasher } from '@/src/features/washers/hooks/useWasher';
 import type { WashService } from '@/types/api';
 
-function BookingPage() {
+function UserBookingScreen() {
     const { washerId } = useLocalSearchParams<{ washerId: string }>();
 
     const { data: washerDetails, isLoading: loading, refetch } = useWasher(washerId);
@@ -123,4 +123,4 @@ function BookingPage() {
 
 }
 
-export default BookingPage;
+export default UserBookingScreen;
