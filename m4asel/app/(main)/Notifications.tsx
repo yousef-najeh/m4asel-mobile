@@ -3,18 +3,20 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../Context/AuthContext';
+import type { NotificationRead } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export default function Notifications() {
     const { user } = useAuth();
-    const [notifications, setNotifications] = useState([]);
+    const [notifications, setNotifications] = useState<NotificationRead[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchNotifications = async () => {
         try {
             setLoading(true);
+            if (!user) return;
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/notifications/`, {
                 method: 'GET',
@@ -24,7 +26,7 @@ export default function Notifications() {
                 },
             });
             if (!response.ok) throw new Error(`Failed to fetch notifications: ${response.status}`);
-            const data = await response.json();
+            const data = (await response.json()) as NotificationRead[];
             setNotifications(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -42,13 +44,13 @@ export default function Notifications() {
 
     useEffect(() => { fetchNotifications(); }, []);
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString?: string | null) => {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
-    const formatTime = (dateString) => {
+    const formatTime = (dateString?: string | null) => {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
@@ -64,8 +66,6 @@ export default function Notifications() {
             </SafeAreaView>
         );
     }
-
-    const unreadCount = notifications.filter(n => !n.is_read).length;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
@@ -83,11 +83,6 @@ export default function Notifications() {
                         </View>
                         <Text style={styles.headerTitle}>الإشعارات</Text>
                     </View>
-                    {unreadCount > 0 && (
-                        <View style={styles.countBadge}>
-                            <Text style={styles.countText}>{unreadCount}</Text>
-                        </View>
-                    )}
                 </View>
 
                 {/* Empty state */}
@@ -103,11 +98,8 @@ export default function Notifications() {
                     notifications.map((notification) => (
                         <View
                             key={notification.id}
-                            style={[styles.card, !notification.is_read && styles.cardUnread]}
+                            style={styles.card}
                         >
-                            {/* Unread dot */}
-                            {!notification.is_read && <View style={styles.unreadDot} />}
-
                             {/* Top row: icon + time */}
                             <View style={styles.cardTop}>
                                 <View style={styles.timeRow}>
@@ -135,8 +127,8 @@ export default function Notifications() {
                             )}
 
                             {/* Message */}
-                            {notification.message && (
-                                <Text style={styles.notifMessage}>{notification.message}</Text>
+                            {notification.body && (
+                                <Text style={styles.notifMessage}>{notification.body}</Text>
                             )}
                         </View>
                     ))

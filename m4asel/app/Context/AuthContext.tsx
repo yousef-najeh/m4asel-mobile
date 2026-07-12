@@ -1,13 +1,20 @@
-// context/AuthContext.jsx   ← Save exactly this (overwrite the old one)
+// context/AuthContext.tsx
 
-import { onAuthStateChanged } from "firebase/auth";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+    type PropsWithChildren,
+} from "react";
 import { auth } from "../../util/fireBaseConfig";
+import type { AuthContextType, UserProfileRead } from "@/types/api";
 
-export const AuthContext = createContext();
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Custom hook to use auth context
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
     if (!context) {
         throw new Error("useAuth must be used within an AuthProvider");
@@ -17,14 +24,14 @@ export const useAuth = () => {
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 // Provider component
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [profile, setProfile] = useState(null);
+export const AuthProvider = ({ children }: PropsWithChildren) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<UserProfileRead | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     // Fetch profile data from API
-    const fetchProfile = async (firebaseUser) => {
+    const fetchProfile = async (firebaseUser: User): Promise<void> => {
         try {
             const token = await firebaseUser.getIdToken();
             console.log("Fetching profile with token:", token);
@@ -40,12 +47,12 @@ export const AuthProvider = ({ children }) => {
                 throw new Error(`Failed to fetch profile: ${response.status}`);
             }
 
-            const profileData = await response.json();
+            const profileData = (await response.json()) as UserProfileRead;
             setProfile(Object.freeze(profileData));
             setError(null);
         } catch (err) {
             console.error('Error fetching profile:', err);
-            setError(err.message);
+            setError(err instanceof Error ? err.message : 'Failed to fetch profile');
             setProfile(null);
         }
     };
@@ -69,7 +76,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Helper to refresh profile data
-    const refreshProfile = async () => {
+    const refreshProfile = async (): Promise<void> => {
         if (user) {
             setLoading(true);
             await fetchProfile(user);
@@ -77,22 +84,18 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                profile,
-                loading,
-                error,
-                refreshProfile,
-                isAuthenticated: !!user,
-                role: profile?.user_role,
-                washerProfile: profile?.washer_profile,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
+    const value: AuthContextType = {
+        user,
+        profile,
+        loading,
+        error,
+        refreshProfile,
+        isAuthenticated: !!user,
+        role: profile?.user_role,
+        washerProfile: profile?.washer_profile,
+    };
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Default export for Expo Router (to prevent route warning)

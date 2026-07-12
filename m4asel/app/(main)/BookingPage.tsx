@@ -10,18 +10,19 @@ import LoadingState from '../Components/Booking/LoadingState';
 import ServiceCards from '../Components/Booking/ServiceCards';
 import TimeSlotGrid from '../Components/Booking/TimeSlotGrid';
 import { useAuth } from '../Context/AuthContext';
+import type { WasherProfile, WashService } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 function BookingPage() {
     const { user } = useAuth();
-    const { washerId } = useLocalSearchParams();
+    const { washerId } = useLocalSearchParams<{ washerId: string }>();
 
-    
-    const [washerDetails, setWasherDetails] = useState(null);
+
+    const [washerDetails, setWasherDetails] = useState<WasherProfile | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedService, setSelectedService] = useState(null);
-    const [selectedTime, setSelectedTime] = useState(null);
+    const [selectedService, setSelectedService] = useState<WashService | null>(null);
+    const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -29,6 +30,7 @@ function BookingPage() {
     const fetchWasherDetails = async () => {
         try {
             setLoading(true);
+            if (!user) return;
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/washers/${washerId}`, {
                 method: 'GET',
@@ -42,7 +44,7 @@ function BookingPage() {
                 throw new Error(`Failed to fetch washer: ${response.status}`);
             }
             
-            const data = await response.json();
+            const data = (await response.json()) as WasherProfile;
             setWasherDetails(data);
         } catch (error) {
             console.error('Error fetching washer details:', error);
@@ -70,12 +72,12 @@ function BookingPage() {
         }
     }, [selectedDate]);
 
-    const handleServiceSelect = (service) => {
+    const handleServiceSelect = (service: WashService) => {
         setSelectedService(service);
     };
 
     const handleConfirmBooking = async () => {
-        if (!selectedService || !selectedTime) return;
+        if (!user || !selectedService || !selectedTime) return;
 
         try {
             setBookingLoading(true);
@@ -123,7 +125,7 @@ function BookingPage() {
             );
         } catch (error) {
             console.error('Error creating booking:', error);
-            const errorMessage = error?.message || error?.toString() || 'حدث خطأ أثناء إنشاء الحجز';
+            const errorMessage = error instanceof Error ? error.message : 'حدث خطأ أثناء إنشاء الحجز';
             Alert.alert('خطأ', errorMessage);
         } finally {
             setBookingLoading(false);
@@ -167,7 +169,7 @@ function BookingPage() {
                         />
                         <TimeSlotGrid
                             washerId={washerId}
-                            serviceId={selectedService.id}
+                            serviceId={selectedService.id!}
                             date={selectedDate}
                             selectedTime={selectedTime}
                             onSelectTime={setSelectedTime}

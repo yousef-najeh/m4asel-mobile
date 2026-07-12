@@ -8,9 +8,17 @@ const INITIAL_SHOW = 9;
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-export default function TimeSlotGrid({ washerId, serviceId, date, selectedTime, onSelectTime }) {
+interface TimeSlotGridProps {
+    washerId: string;
+    serviceId: number;
+    date: string;
+    selectedTime: string | null;
+    onSelectTime: (time: string) => void;
+}
+
+export default function TimeSlotGrid({ washerId, serviceId, date, selectedTime, onSelectTime }: TimeSlotGridProps) {
     const { user } = useAuth();
-    const [availableTimes, setAvailableTimes] = useState([]);
+    const [availableTimes, setAvailableTimes] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
 
@@ -23,6 +31,7 @@ export default function TimeSlotGrid({ washerId, serviceId, date, selectedTime, 
     }, [date, serviceId]);
 
     const fetchAvailableTimes = async () => {
+        if (!user) return;
         try {
             setLoading(true);
             const token = await user.getIdToken();
@@ -31,7 +40,7 @@ export default function TimeSlotGrid({ washerId, serviceId, date, selectedTime, 
                 { method: 'GET', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
             if (!response.ok) throw new Error(`Failed: ${response.status}`);
-            const data = await response.json();
+            const data = (await response.json()) as string[];
             setAvailableTimes(data || []);
         } catch (error) {
             console.error('Error fetching times:', error);

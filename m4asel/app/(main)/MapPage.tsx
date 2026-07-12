@@ -1,9 +1,10 @@
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Dimensions, FlatList, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Dimensions, FlatList, Linking, Pressable, StyleSheet, Text, View, type ViewToken } from "react-native";
 import { Icon } from "react-native-elements";
 import MapView, { Marker } from "react-native-maps";
 import MapCard from "../Components/MapCard";
+import type { Washer } from '@/types/api';
 
 const { width: WINDOW_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = WINDOW_WIDTH * 0.82;
@@ -12,15 +13,15 @@ const SNAP_INTERVAL = CARD_WIDTH + CARD_MARGIN * 2;
 const CENTER_PADDING = (WINDOW_WIDTH - CARD_WIDTH) / 2 - CARD_MARGIN;
 
 const MapPage = () => {
-  const mapRef = useRef(null);
-  const flatListRef = useRef(null);
-  const [locations, setLocations] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedMarker, setSelectedMarker] = useState(null);
+  const mapRef = useRef<MapView>(null);
+  const flatListRef = useRef<FlatList<Washer>>(null);
+  const [locations, setLocations] = useState<Washer[]>([]);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedMarker, setSelectedMarker] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
   const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-  const focusOnMarker = (item) => {
+  const focusOnMarker = (item: Washer) => {
     if (!item || !mapRef.current) return;
     setSelectedMarker(item.id);
     mapRef.current.animateToRegion({
@@ -31,7 +32,7 @@ const MapPage = () => {
     }, 500);
   };
 
-  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     if (viewableItems.length > 0 && viewableItems[0].isViewable) {
       const item = viewableItems[0].item;
       focusOnMarker(item);

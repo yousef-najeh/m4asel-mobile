@@ -1,13 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
     ActivityIndicator, Alert, KeyboardAvoidingView, Modal,
     Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
+import type { User } from 'firebase/auth';
+import type { WashService } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-export default function ServiceFormModal({ visible, service, washerId, user, onClose, onSaved }) {
+interface ServiceFormModalProps {
+    visible: boolean;
+    service: WashService | null;
+    washerId?: number;
+    user: User;
+    onClose: () => void;
+    onSaved: () => void;
+}
+
+export default function ServiceFormModal({ visible, service, washerId, user, onClose, onSaved }: ServiceFormModalProps) {
     const isEdit = !!service;
 
     const [name, setName] = useState('');
@@ -60,7 +71,7 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
 
             onSaved();
         } catch (e) {
-            Alert.alert('خطأ', e.message || 'حدث خطأ، حاول مجدداً');
+            Alert.alert('خطأ', e instanceof Error ? e.message : 'حدث خطأ، حاول مجدداً');
         } finally {
             setSaving(false);
         }
@@ -171,7 +182,14 @@ export default function ServiceFormModal({ visible, service, washerId, user, onC
     );
 }
 
-const Field = ({ label, children, flex }) => (
+interface FieldProps {
+    label: string;
+    children: ReactNode;
+    flex?: boolean;
+    required?: boolean;
+}
+
+const Field = ({ label, children, flex }: FieldProps) => (
     <View style={[styles.field, flex && { flex: 1 }]}>
         <Text style={styles.label}>{label}</Text>
         {children}

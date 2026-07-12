@@ -2,13 +2,21 @@ import { View, Text, Pressable, ActivityIndicator, StyleSheet } from "react-nati
 import { Icon } from 'react-native-elements';
 import { formatTime } from '../../utils/helpers';
 
-function TimeSlotPicker({ 
-    availableTimes, 
-    selectedTime, 
-    onSelectTime, 
-    loading, 
-    selectedDate 
-}) {
+interface TimeSlotPickerProps {
+    availableTimes: string[];
+    selectedTime: string | null;
+    onSelectTime: (time: string) => void;
+    loading: boolean;
+    selectedDate: string;
+}
+
+function TimeSlotPicker({
+    availableTimes,
+    selectedTime,
+    onSelectTime,
+    loading,
+    selectedDate,
+}: TimeSlotPickerProps) {
 
     if (loading) {
         return (

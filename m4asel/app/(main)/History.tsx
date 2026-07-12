@@ -5,19 +5,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserRole } from '../../constants/UserRole';
 import { useAuth } from '../Context/AuthContext';
 import { formatDateTime } from '../utils/helpers';
+import type { Booking, OrderStatus } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-const statusConfig = {
-    pending:   { label: "قيد الانتظار", bg: "#FFFBEB", text: "#92400E", border: "#FDE68A", icon: "schedule" },
-    confirmed: { label: "مؤكد",         bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE", icon: "check-circle" },
-    completed: { label: "مكتمل",        bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0", icon: "check-circle" },
-    cancelled: { label: "ملغي",         bg: "#FEF2F2", text: "#991B1B", border: "#FECACA", icon: "cancel" },
+interface StatusConfig {
+    label: string;
+    bg: string;
+    text: string;
+    border: string;
+    icon: string;
+}
+
+const statusConfig: Record<OrderStatus, StatusConfig> = {
+    pending:     { label: "قيد الانتظار", bg: "#FFFBEB", text: "#92400E", border: "#FDE68A", icon: "schedule" },
+    in_progress: { label: "قيد التنفيذ",  bg: "#EFF6FF", text: "#1D4ED8", border: "#BFDBFE", icon: "autorenew" },
+    completed:   { label: "مكتمل",        bg: "#ECFDF5", text: "#065F46", border: "#A7F3D0", icon: "check-circle" },
+    cancelled:   { label: "ملغي",         bg: "#FEF2F2", text: "#991B1B", border: "#FECACA", icon: "cancel" },
 };
 
 export default function History() {
     const { user, role } = useAuth();
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -26,6 +35,7 @@ export default function History() {
     const fetchBookings = async () => {
         try {
             setLoading(true);
+            if (!user) return;
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/bookings/`, {
                 method: 'GET',
@@ -35,7 +45,7 @@ export default function History() {
                 },
             });
             if (!response.ok) throw new Error(`Failed to fetch bookings: ${response.status}`);
-            const data = await response.json();
+            const data = (await response.json()) as Booking[];
             setBookings(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching bookings:', error);

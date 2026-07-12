@@ -4,25 +4,27 @@ import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../Context/AuthContext';
 import { formatDateTime } from "../utils/helpers";
+import type { Booking, OrderStatus, BookingStatusUpdate } from '@/types/api';
 
 const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 function Bookings() {
     const { user } = useAuth();
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchBookings = async () => {
         try {
             setLoading(true);
+            if (!user) return;
             const token = await user.getIdToken();
             const response = await fetch(`${apiUrl}/bookings/`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
             if (!response.ok) throw new Error(`${response.status}`);
-            const data = await response.json();
+            const data = (await response.json()) as Booking[];
             const active = Array.isArray(data)
                 ? data.filter(b => b.status === 'pending' || b.status === 'in_progress')
                 : [];
@@ -43,10 +45,11 @@ function Bookings() {
 
     useEffect(() => { fetchBookings(); }, []);
 
-    const updateStatus = async (bookingId, newStatus, cancelReason = null) => {
+    const updateStatus = async (bookingId: number, newStatus: OrderStatus, cancelReason: string | null = null) => {
         try {
+            if (!user) return;
             const token = await user.getIdToken();
-            const body = { status: newStatus };
+            const body: BookingStatusUpdate = { status: newStatus };
             if (cancelReason) body.cancel_reason = cancelReason;
             const response = await fetch(`${apiUrl}/bookings/${bookingId}/status`, {
                 method: 'PATCH',
@@ -60,7 +63,7 @@ function Bookings() {
         }
     };
 
-    const handleReject = (bookingId) => {
+    const handleReject = (bookingId: number) => {
         Alert.alert('رفض الطلب', 'يرجى اختيار سبب الرفض:', [
             { text: 'مشغول في هذا الوقت', onPress: () => updateStatus(bookingId, 'cancelled', 'مشغول في هذا الوقت') },
             { text: 'لا يمكنني تقديم هذه الخدمة', onPress: () => updateStatus(bookingId, 'cancelled', 'لا يمكنني تقديم هذه الخدمة') },
