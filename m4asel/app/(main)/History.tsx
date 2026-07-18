@@ -1,4 +1,4 @@
-import HistoryScreen from "@/src/features/bookings/screens/HistoryScreen";
+import HistoryScreen from "@/src/screens/History/HistoryScreen";
 
 export default function History() {
   return <HistoryScreen />;

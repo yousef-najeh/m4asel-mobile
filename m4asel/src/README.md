@@ -1,29 +1,33 @@
 # `src/` — application code
 
-`app/` (Expo Router) holds **routes only**. All real code lives here in `src/`, organized
-**feature-first**. See the repo-root [`CLEAN_ARCHITECTURE_REFACTOR.md`](../../CLEAN_ARCHITECTURE_REFACTOR.md)
-and [`docs/architecture.drawio`](../docs/architecture.drawio) for the full plan.
+`app/` (Expo Router) holds **routes only** (thin re-export shims). All real code lives here in
+`src/`, organized **screen-first**: each screen owns its private components/hooks/styles, and
+cross-cutting code lives in flat top-level folders. See
+[`docs/SCREEN_BASED_ARCHITECTURE.md`](../docs/SCREEN_BASED_ARCHITECTURE.md).
 
 ```
 src/
-├── providers/     app-wide provider composition (SafeArea + QueryClient + Auth + Gluestack)
+├── screens/       one folder per screen: <Screen>.tsx + <Screen>.styles.ts, plus
+│                  components/ and hooks/ when private to that screen
+│                    Login · SignUp · Profile · Map · Notifications · WasherDetails
+│                    UserBooking · WasherBookings · History
+├── services/      API/data layer — auth · bookings · washers · notifications
+├── hooks/         cross-screen hooks (useBookings)
+├── context/       AuthContext  (useAuth / AuthProvider)
 ├── api/           client.ts (token + fetch + errors) · endpoints.ts
+├── providers/     app-wide provider composition (SafeArea + QueryClient + Auth + Gluestack)
 ├── config/        env.ts · firebase.ts
-├── features/      auth · bookings · washers · map · notifications · profile
-│                    each: screens/ components/ hooks/ services/
-├── shared/        components/ · hooks/  (reused by 2+ features)
+├── shared/        components/  (reused by 2+ screens: ErrorState, LoadingState, TabButton)
 ├── theme/         colors · spacing · typography  (design tokens)
-├── constants/     UserRole · statusConfig · roleRedirectMap · authErrorMessages
-├── types/         api.ts  (domain types)
+├── constants/     UserRole · roleRedirectMap
 └── utils/         helpers.ts
 ```
 
 **Dependency direction (one way, downward):**
 `screen → hook (React Query) → service → api/client → backend`.
 
-**Placement rule:** feature-specific → keep it in the feature; used by 2+ features → lift it to
-`src/shared`, `src/theme`, or `src/constants`.
-
-> Folders are created as each migration phase needs them. During the migration, cross-cutting
-> `src/` modules are imported as `@/src/...`; the alias is flipped to a bare `@/...` in the final
-> cleanup phase.
+**Placement rules:**
+- Services always live in `src/services/`.
+- A hook/component used by **one** screen lives in that screen's folder; used by **2+** screens →
+  lift it to `src/hooks`, `src/shared/components`, `src/theme`, or `src/constants`.
+- Styles sit next to the file they style (`X.styles.ts` beside `X.tsx`).

@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import { I18nManager } from "react-native";
 import { resolveRoleRedirect } from "@/src/constants/roleRedirectMap";
-import { useAuth } from "@/src/features/auth";
+import { useAuth } from "@/src/context/AuthContext";
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);

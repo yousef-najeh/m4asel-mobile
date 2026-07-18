@@ -3,7 +3,7 @@
 import { Tabs } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, StyleSheet } from "react-native";
-import { useAuth } from "@/src/features/auth";
+import { useAuth } from "@/src/context/AuthContext";
 import TabButton from "@/src/shared/components/TabButton";
 import { UserRole } from "@/src/constants/UserRole";
 

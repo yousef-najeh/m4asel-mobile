@@ -3,7 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import type { PropsWithChildren } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import { AuthProvider } from "@/src/features/auth";
+import { AuthProvider } from "@/src/context/AuthContext";
 
 /**
  * Single React Query client for the app. Server state (bookings, washers, …)

@@ -1,4 +1,4 @@
-import WasherDetailsScreen from "@/src/features/washers/screens/WasherDetailsScreen";
+import WasherDetailsScreen from "@/src/screens/WasherDetails/WasherDetailsScreen";
 
 export default function WasherDetails() {
   return <WasherDetailsScreen />;

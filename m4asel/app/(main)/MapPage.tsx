@@ -1,4 +1,4 @@
-import MapScreen from "@/src/features/map/screens/MapScreen";
+import MapScreen from "@/src/screens/Map/MapScreen";
 
 export default function MapPage() {
   return <MapScreen />;

@@ -1,6 +1,6 @@
 import { Redirect, Stack } from "expo-router";
 import { resolveRoleRedirect } from "@/src/constants/roleRedirectMap";
-import { useAuth } from "@/src/features/auth";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function AuthLayout() {
   const { user, loading, role } = useAuth();
