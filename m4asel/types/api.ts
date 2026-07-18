@@ -3,7 +3,7 @@
 // (schemas.py / models.py / constants.py). Keep in sync when the API changes.
 
 import type { User as FirebaseUser } from 'firebase/auth';
-import type { UserRole } from '@/constants/UserRole';
+import type { UserRole } from '@/src/constants/UserRole';
 
 // --- Enums (constants.py) ---
 export type OrderStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';

@@ -1,0 +1,35 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+    container: { marginBottom: 16 },
+    scroll: { gap: 8, paddingHorizontal: 2, paddingVertical: 4 },
+    pill: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        minWidth: 66,
+        gap: 2,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    pillSelected: {
+        backgroundColor: '#007AFF',
+        borderColor: '#007AFF',
+        shadowColor: '#007AFF',
+        shadowOpacity: 0.3,
+        elevation: 4,
+    },
+    dayName: { fontSize: 11, fontWeight: '600', color: '#9CA3AF' },
+    dayNum: { fontSize: 20, fontWeight: '800', color: '#111827' },
+    monthName: { fontSize: 10, fontWeight: '600', color: '#9CA3AF' },
+    textSelected: { color: '#FFFFFF' },
+    textSelectedSub: { color: 'rgba(255,255,255,0.75)' },
+});

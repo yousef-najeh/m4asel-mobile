@@ -1,18 +1,10 @@
-// app/index.jsx
-import { Redirect, type Href } from 'expo-router';
-import { useAuth } from './Context/AuthContext';
+import { Redirect } from "expo-router";
 import { I18nManager } from "react-native";
-import { UserRole } from '../constants/UserRole';
+import { resolveRoleRedirect } from "@/src/constants/roleRedirectMap";
+import { useAuth } from "@/src/context/AuthContext";
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
-
-const roleRedirectMap: Partial<Record<UserRole, Href>> = {
-    [UserRole.WASHER_OWNER]: "/(main)/Bookings",
-    [UserRole.WASHER_WORKER]: "/(main)/Bookings",
-    [UserRole.CONFIRMED_USER]: "/(main)/MapPage",
-    [UserRole.UNCONFIRMED_USER]: "/(main)/MapPage",
-};
 
 export default function Index() {
     const { user, role, loading } = useAuth();
@@ -21,6 +13,5 @@ export default function Index() {
 
     if (!user) return <Redirect href="/(auth)/Login" />;
 
-    const target: Href = (role && roleRedirectMap[role]) || "/(main)/ProfilePage";
-    return <Redirect href={target} />;
+    return <Redirect href={resolveRoleRedirect(role)} />;
 }

@@ -1,12 +1,7 @@
-// app/_layout.jsx
 import { Slot } from "expo-router";
-import { AuthProvider } from "./Context/AuthContext";  // ← correct path
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { LogBox } from "react-native";
-
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import '@/global.css';
+import { AppProviders } from "@/src/providers";
+import "@/global.css";
 
 // Suppress SafeAreaView deprecation warning from expo-router (internal dependency issue)
 LogBox.ignoreLogs([
@@ -15,13 +10,8 @@ LogBox.ignoreLogs([
 
 export default function RootLayout() {
     return (
-        <SafeAreaProvider>
-            <AuthProvider>
-                <StatusBar style="light" />
-                <GluestackUIProvider mode="dark">
-                    <Slot />
-                </GluestackUIProvider>
-            </AuthProvider>
-        </SafeAreaProvider>
+        <AppProviders>
+            <Slot />
+        </AppProviders>
     );
 }

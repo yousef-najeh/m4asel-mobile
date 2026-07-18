@@ -1,20 +1,12 @@
-
-import { Redirect,Stack, type Href } from "expo-router";
-import { useAuth } from "../Context/AuthContext";   // adjust path if needed
-import {UserRole} from '../../constants/UserRole';
-
-const roleRedirectMap: Partial<Record<UserRole, Href>> = {
-  [UserRole.WASHER_OWNER]: "/(main)/Bookings",
-  [UserRole.WASHER_WORKER]: "/(main)/Bookings",
-  [UserRole.CONFIRMED_USER]: "/(main)/MapPage",
-  [UserRole.UNCONFIRMED_USER]: "/(main)/MapPage",
-};
+import { Redirect, Stack } from "expo-router";
+import { resolveRoleRedirect } from "@/src/constants/roleRedirectMap";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function AuthLayout() {
-  const { user, loading,role } = useAuth();
+  const { user, loading, role } = useAuth();
+
   if (!loading && user) {
-    const target: Href = (role && roleRedirectMap[role]) || "/(main)/ProfilePage";
-    return <Redirect href={target} />;
+    return <Redirect href={resolveRoleRedirect(role)} />;
   }
 
   return (
