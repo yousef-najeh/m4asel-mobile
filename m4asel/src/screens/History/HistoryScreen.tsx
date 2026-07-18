@@ -2,11 +2,11 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } 
 import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserRole } from '@/src/constants/UserRole';
-import { useAuth } from '@/src/features/auth';
-import { useBookings } from '@/src/features/bookings/hooks/useBookings';
+import { useAuth } from '@/src/context/AuthContext';
+import { useBookings } from '@/src/hooks/useBookings';
 import { formatDateTime } from '@/src/utils/helpers';
 import type { OrderStatus } from '@/types/api';
-import { styles } from "../styles/HistoryScreen.styles";
+import { styles } from "./HistoryScreen.styles";
 
 interface StatusConfig {
     label: string;
@@ -77,7 +77,7 @@ export default function History() {
                     </View>
                 ) : (
                     bookings.map((booking) => {
-                        const { date, time } = formatDateTime(booking.scheduled_time);
+                        const { date, time, day } = formatDateTime(booking.scheduled_time);
                         const status = statusConfig[booking.status] || statusConfig.pending;
 
                         const displayName = isWasher
@@ -142,6 +142,10 @@ export default function History() {
                                     <View style={styles.timeItem}>
                                         <Icon name="event" type="material" size={14} color="#9CA3AF" />
                                         <Text style={styles.timeText}>{date}</Text>
+                                    </View>
+                                    <View style={styles.timeItem}>
+                                        <Icon name="today" type="material" size={14} color="#9CA3AF" />
+                                        <Text style={styles.timeText}>{day}</Text>
                                     </View>
                                 </View>
 

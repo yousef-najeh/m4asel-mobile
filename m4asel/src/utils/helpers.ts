@@ -20,18 +20,20 @@ export const formatTime = (input?: string | null): string => {
     }
 };
 
-export const formatDateTime = (isoString?: string | null): { date: string; time: string } => {
-    if (!isoString) return { date: '---', time: '---' };
+export const formatDateTime = (isoString?: string | null): { date: string; time: string; day: string } => {
+    if (!isoString) return { date: '---', time: '---', day: '---' };
     try {
         const d = new Date(isoString);
         const months = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
         const date = `${d.getDate()} ${months[d.getMonth()]}`;
+        const day = days[d.getDay()];
         let h = d.getHours();
         const m = String(d.getMinutes()).padStart(2, '0');
         const ampm = h >= 12 ? 'م' : 'ص';
         h = h % 12 || 12;
-        return { date, time: `${h}:${m} ${ampm}` };
-    } catch { return { date: '---', time: '---' }; }
+        return { date, time: `${h}:${m} ${ampm}`, day };
+    } catch { return { date: '---', time: '---', day: '---' }; }
 };
 
 export const formatDistance = (km?: number | null): string | null => {
