@@ -1,5 +1,5 @@
-import SignUpScreen from "@/src/screens/SignUp/SignUpScreen";
+import AuthScreen from "@/src/screens/Auth/AuthScreen";
 
 export default function SignUp() {
-  return <SignUpScreen />;
+  return <AuthScreen initialTab="signup" />;
 }
