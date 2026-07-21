@@ -1,5 +1,5 @@
-import LoginScreen from "@/src/screens/Login/LoginScreen";
+import AuthScreen from "@/src/screens/Auth/AuthScreen";
 
 export default function Login() {
-  return <LoginScreen />;
+  return <AuthScreen initialTab="login" />;
 }
