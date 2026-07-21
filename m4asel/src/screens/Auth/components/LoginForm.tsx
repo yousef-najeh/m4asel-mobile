@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import * as Yup from 'yup';
 import { authErrorMessages, authService } from '@/src/services/auth.service';
+import { FIELD_COMPONENTS } from '@/src/shared/components/fields/registry';
 import { LOGIN_FIELDS, type LoginValues } from '../constants/authFields';
 import { styles } from '../AuthScreen.styles';
 import AuthActions from './AuthActions';
 import AuthErrorBox from './AuthErrorBox';
-import AuthField from './AuthField';
 
 const schema = Yup.object().shape({
     email: Yup.string()
@@ -43,20 +43,19 @@ export default function LoginForm() {
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <View style={styles.formBlock}>
                     <View style={styles.form}>
-                        {LOGIN_FIELDS.map((f) => (
-                            <AuthField
-                                key={f.name}
-                                iconName={f.icon}
-                                secure={f.secure}
-                                placeholder={f.placeholder}
-                                keyboardType={f.keyboardType}
-                                autoCapitalize={f.autoCapitalize}
-                                value={values[f.name]}
-                                onChangeText={handleChange(f.name)}
-                                onBlur={handleBlur(f.name)}
-                                error={touched[f.name] ? errors[f.name] : undefined}
-                            />
-                        ))}
+                        {LOGIN_FIELDS.map((f) => {
+                            const Field = FIELD_COMPONENTS[f.type];
+                            return (
+                                <Field
+                                    key={f.name}
+                                    value={values[f.name]}
+                                    onChangeText={handleChange(f.name)}
+                                    onBlur={handleBlur(f.name)}
+                                    error={touched[f.name] ? errors[f.name] : undefined}
+                                    {...f.props}
+                                />
+                            );
+                        })}
 
                         <Text style={styles.forgot}>نسيت كلمة السر؟</Text>
 

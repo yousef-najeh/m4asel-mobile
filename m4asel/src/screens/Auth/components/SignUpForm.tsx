@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import * as Yup from 'yup';
 import { authService } from '@/src/services/auth.service';
+import { FIELD_COMPONENTS } from '@/src/shared/components/fields/registry';
 import { SIGNUP_FIELDS, type SignUpValues } from '../constants/authFields';
 import { styles } from '../AuthScreen.styles';
 import AuthActions from './AuthActions';
 import AuthErrorBox from './AuthErrorBox';
-import AuthField from './AuthField';
 
 const schema = Yup.object().shape({
     name: Yup.string()
@@ -47,20 +47,19 @@ export default function SignUpForm() {
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
                 <View style={styles.formBlock}>
                     <View style={styles.form}>
-                        {SIGNUP_FIELDS.map((f) => (
-                            <AuthField
-                                key={f.name}
-                                iconName={f.icon}
-                                secure={f.secure}
-                                placeholder={f.placeholder}
-                                keyboardType={f.keyboardType}
-                                autoCapitalize={f.autoCapitalize}
-                                value={values[f.name]}
-                                onChangeText={handleChange(f.name)}
-                                onBlur={handleBlur(f.name)}
-                                error={touched[f.name] ? errors[f.name] : undefined}
-                            />
-                        ))}
+                        {SIGNUP_FIELDS.map((f) => {
+                            const Field = FIELD_COMPONENTS[f.type];
+                            return (
+                                <Field
+                                    key={f.name}
+                                    value={values[f.name]}
+                                    onChangeText={handleChange(f.name)}
+                                    onBlur={handleBlur(f.name)}
+                                    error={touched[f.name] ? errors[f.name] : undefined}
+                                    {...f.props}
+                                />
+                            );
+                        })}
 
                         <AuthErrorBox message={serverError} />
                     </View>

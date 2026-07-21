@@ -58,41 +58,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     gap: 20,
   },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    height: 58,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.primaryFaint,
-    backgroundColor: colors.surfaceInput,
-    paddingHorizontal: 20,
-  },
-  inputRowFocused: {
-    borderColor: colors.accentFocus,
-  },
-  inputRowError: {
-    borderColor: colors.error,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    textAlign: "right",
-    padding: 0,
-  },
-  iconBtn: {
-    width: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorText: {
-    fontSize: 12,
-    color: colors.error,
-    textAlign: "right",
-    fontWeight: "500",
-  },
+  /* Input-row styles now live in src/shared/components/fields/FieldShell.styles.ts */
   forgot: {
     fontSize: 13,
     color: colors.primary,

@@ -1,4 +1,4 @@
-import { type KeyboardTypeOptions, type TextInputProps } from 'react-native';
+import type { FieldConfig } from '@/src/shared/components/fields/types';
 
 export interface LoginValues {
     email: string;
@@ -12,25 +12,25 @@ export interface SignUpValues {
     password: string;
 }
 
-/** Declarative descriptor for one AuthField row, keyed to a Formik value. */
-export type FieldConfig<T> = {
-    name: keyof T;
-    icon: string;
-    placeholder: string;
-    keyboardType?: KeyboardTypeOptions;
-    autoCapitalize?: TextInputProps['autoCapitalize'];
-    /** Password field: AuthField renders the show/hide toggle and owns visibility. */
-    secure?: boolean;
-};
-
+/**
+ * Which fields each form renders, in order. Icons, keyboards, placeholders and
+ * autofill hints live in the field components themselves — see
+ * `src/shared/components/fields/`.
+ */
 export const LOGIN_FIELDS: FieldConfig<LoginValues>[] = [
-    { name: 'email',    icon: 'person-outline', placeholder: 'البريد الإلكتروني', keyboardType: 'email-address', autoCapitalize: 'none' },
-    { name: 'password', icon: 'lock-outline',   placeholder: 'كلمة المرور', secure: true },
+    { name: 'email',    type: 'email' },
+    { name: 'password', type: 'password' },
 ];
 
 export const SIGNUP_FIELDS: FieldConfig<SignUpValues>[] = [
-    { name: 'name',          icon: 'person-outline',  placeholder: 'اسمك الكامل' },
-    { name: 'email',         icon: 'alternate-email', placeholder: 'البريد الإلكتروني', keyboardType: 'email-address', autoCapitalize: 'none' },
-    { name: 'password',      icon: 'lock-outline',    placeholder: 'كلمة المرور', secure: true },
-    { name: 'mobile_number', icon: 'call',            placeholder: 'رقم الهاتف', keyboardType: 'phone-pad' },
+    { name: 'name',     type: 'name' },
+    { name: 'email',    type: 'email' },
+    {
+        name: 'password',
+        type: 'password',
+        // Signals a *new* password so the OS/password manager offers to generate
+        // and save one, rather than autofilling the existing one.
+        props: { autoComplete: 'new-password', textContentType: 'newPassword' },
+    },
+    { name: 'mobile_number', type: 'phone' },
 ];
