@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import type { TypedFieldProps } from "@/src/shared/components/fields/types";
 
 export const styles = StyleSheet.create({
     backdrop: {
@@ -40,15 +41,20 @@ export const styles = StyleSheet.create({
 
     form: { padding: 20, gap: 14 },
     row: { flexDirection: 'row', gap: 12 },
+
+    /* FieldShell overrides — this sheet uses a boxed, label-above look rather
+       than the rounded icon rows the auth forms use. See `fieldOverrides` below. */
     field: { gap: 6 },
+    /** Half-width field inside `row` — cancels the shell's default full width. */
+    fieldFlex: { flex: 1, width: 'auto', gap: 6 },
     label: { fontSize: 13, fontWeight: '700', color: '#374151', textAlign: 'right' },
-    input: {
+    fieldRow: {
+        height: 'auto',
         borderWidth: 1.5, borderColor: '#E5E7EB',
         borderRadius: 12, backgroundColor: '#F9FAFB',
         paddingHorizontal: 14, paddingVertical: 12,
-        fontSize: 15, color: '#111827',
     },
-    textarea: { height: 80, textAlignVertical: 'top' },
+    fieldInput: { fontSize: 15, color: '#111827' },
 
     saveBtn: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -74,3 +80,19 @@ export const styles = StyleSheet.create({
     toggleLabel: { fontSize: 14, fontWeight: '700', color: '#374151', textAlign: 'right' },
     toggleStatus: { fontSize: 12, fontWeight: '600', textAlign: 'right' },
 });
+
+/**
+ * The style overrides every field in this sheet shares. Spread it first, then
+ * pass the per-field props:  `<PriceField {...fieldOverrides} label="…" />`.
+ *
+ * `placeholderTextColor` is included because the shell defaults to the auth
+ * palette's much lighter `colors.placeholder`.
+ */
+export const fieldOverrides: Partial<TypedFieldProps> = {
+    placeholderTextColor: '#9CA3AF',
+    containerStyle: styles.field,
+    labelStyle: styles.label,
+    rowStyle: styles.fieldRow,
+    inputStyle: styles.fieldInput,
+};
+

@@ -11,8 +11,8 @@ export default function AuthLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" />
-      <Stack.Screen name="SignUp" />
+      {/* Single auth route — AuthScreen swaps login/signup via tabs, not navigation. */}
+      <Stack.Screen name="AuthPage" />
     </Stack>
   );
 }

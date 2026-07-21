@@ -9,7 +9,7 @@ cross-cutting code lives in flat top-level folders. See
 src/
 ├── screens/       one folder per screen: <Screen>.tsx + <Screen>.styles.ts, plus
 │                  components/ and hooks/ when private to that screen
-│                    Login · SignUp · Profile · Map · Notifications · WasherDetails
+│                    Auth (login+signup tabs) · Profile · Map · Notifications · WasherDetails
 │                    UserBooking · WasherBookings · History
 ├── services/      API/data layer — auth · bookings · washers · notifications
 ├── hooks/         cross-screen hooks (useBookings)

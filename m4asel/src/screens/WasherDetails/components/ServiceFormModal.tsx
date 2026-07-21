@@ -1,13 +1,17 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ActivityIndicator, Alert, KeyboardAvoidingView, Modal,
-    Platform, Pressable, ScrollView, Switch, Text, TextInput, View,
+    Platform, Pressable, ScrollView, Switch, Text, View,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { ApiError } from '@/src/api/client';
 import { washersService } from '@/src/services/washers.service';
+import DurationField from '@/src/shared/components/fields/DurationField';
+import PriceField from '@/src/shared/components/fields/PriceField';
+import TextAreaField from '@/src/shared/components/fields/TextAreaField';
+import TextField from '@/src/shared/components/fields/TextField';
 import type { WashService } from '@/types/api';
-import { styles } from './ServiceFormModal.styles';
+import { fieldOverrides, styles } from './ServiceFormModal.styles';
 
 interface ServiceFormModalProps {
     visible: boolean;
@@ -39,16 +43,7 @@ export default function ServiceFormModal({ visible, service, onClose, onSaved }:
     const isValid = name.trim() && price.trim() && duration.trim();
 
     const handleSave = async () => {
-        console.log('[ServiceForm] handleSave', {
-            mode: isEdit ? 'edit' : 'create',
-            serviceId: service?.id,
-            raw: { name, price, duration, description, isActive },
-            isValid: !!isValid,
-        });
-        if (!isValid) {
-            console.warn('[ServiceForm] blocked — form invalid (name/price/duration required)');
-            return;
-        }
+        if (!isValid) return;
         try {
             setSaving(true);
             const base = {
@@ -58,29 +53,21 @@ export default function ServiceFormModal({ visible, service, onClose, onSaved }:
                 // Send an empty string (not null) when blank — the backend rejects null (422).
                 description: description.trim(),
             };
-            console.log('[ServiceForm] payload', {
-                ...base,
-                priceIsNaN: Number.isNaN(base.price),
-                durationIsNaN: Number.isNaN(base.duration_minutes),
-            });
 
             if (isEdit && service) {
-                console.log('[ServiceForm] → updateService', service.id);
-                const res = await washersService.updateService(service.id!, { ...base, is_active: isActive });
-                console.log('[ServiceForm] ✓ updateService done', res);
+                await washersService.updateService(service.id!, { ...base, is_active: isActive });
             } else {
-                console.log('[ServiceForm] → createService');
-                const res = await washersService.createService(base);
-                console.log('[ServiceForm] ✓ createService done', res);
+                await washersService.createService(base);
             }
 
             onSaved();
         } catch (e) {
-            console.error('[ServiceForm] ✗ save failed', {
-                status: e instanceof ApiError ? e.status : undefined,
-                detail: e instanceof ApiError ? e.detail : undefined,
-                message: e instanceof Error ? e.message : String(e),
-            });
+            if (__DEV__) {
+                console.error('[ServiceForm] save failed', {
+                    status: e instanceof ApiError ? e.status : undefined,
+                    detail: e instanceof ApiError ? e.detail : undefined,
+                });
+            }
             Alert.alert('خطأ', e instanceof Error ? e.message : 'حدث خطأ، حاول مجدداً');
         } finally {
             setSaving(false);
@@ -108,54 +95,40 @@ export default function ServiceFormModal({ visible, service, onClose, onSaved }:
                     </View>
 
                     <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-                        <Field label="اسم الخدمة *" required>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="مثال: غسيل خارجي"
-                                placeholderTextColor="#9CA3AF"
-                                textAlign="right"
-                                value={name}
-                                onChangeText={setName}
-                            />
-                        </Field>
+                        <TextField
+                            {...fieldOverrides}
+                            label="اسم الخدمة *"
+                            placeholder="مثال: غسيل خارجي"
+                            value={name}
+                            onChangeText={setName}
+                        />
 
                         <View style={styles.row}>
-                            <Field label="المدة (دقيقة) *" flex>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="60"
-                                    placeholderTextColor="#9CA3AF"
-                                    keyboardType="number-pad"
-                                    textAlign="right"
-                                    value={duration}
-                                    onChangeText={setDuration}
-                                />
-                            </Field>
-                            <Field label="السعر (nis) *" flex>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="50"
-                                    placeholderTextColor="#9CA3AF"
-                                    keyboardType="decimal-pad"
-                                    textAlign="right"
-                                    value={price}
-                                    onChangeText={setPrice}
-                                />
-                            </Field>
+                            <DurationField
+                                {...fieldOverrides}
+                                containerStyle={styles.fieldFlex}
+                                label="المدة (دقيقة) *"
+                                placeholder="60"
+                                value={duration}
+                                onChangeText={setDuration}
+                            />
+                            <PriceField
+                                {...fieldOverrides}
+                                containerStyle={styles.fieldFlex}
+                                label="السعر (nis) *"
+                                placeholder="50"
+                                value={price}
+                                onChangeText={setPrice}
+                            />
                         </View>
 
-                        <Field label="الوصف (اختياري)">
-                            <TextInput
-                                style={[styles.input, styles.textarea]}
-                                placeholder="وصف مختصر للخدمة..."
-                                placeholderTextColor="#9CA3AF"
-                                textAlign="right"
-                                multiline
-                                numberOfLines={3}
-                                value={description}
-                                onChangeText={setDescription}
-                            />
-                        </Field>
+                        <TextAreaField
+                            {...fieldOverrides}
+                            label="الوصف (اختياري)"
+                            placeholder="وصف مختصر للخدمة..."
+                            value={description}
+                            onChangeText={setDescription}
+                        />
 
                         {isEdit && (
                             <View style={styles.toggleRow}>
@@ -191,17 +164,3 @@ export default function ServiceFormModal({ visible, service, onClose, onSaved }:
         </Modal>
     );
 }
-
-interface FieldProps {
-    label: string;
-    children: ReactNode;
-    flex?: boolean;
-    required?: boolean;
-}
-
-const Field = ({ label, children, flex }: FieldProps) => (
-    <View style={[styles.field, flex && { flex: 1 }]}>
-        <Text style={styles.label}>{label}</Text>
-        {children}
-    </View>
-);

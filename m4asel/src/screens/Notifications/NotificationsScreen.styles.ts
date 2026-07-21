@@ -109,19 +109,6 @@ export const styles = StyleSheet.create({
         elevation: 3,
         gap: 10,
     },
-    cardUnread: {
-        borderLeftWidth: 4,
-        borderLeftColor: '#007AFF',
-    },
-    unreadDot: {
-        position: 'absolute',
-        top: 16,
-        left: 16,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#007AFF',
-    },
     cardTop: {
         flexDirection: 'row',
         justifyContent: 'space-between',

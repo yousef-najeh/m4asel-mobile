@@ -14,7 +14,7 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     try {
       await authService.signOut();
-      router.replace("/(auth)/Login");
+      router.replace("/(auth)/AuthPage");
     } catch (error) {
       console.error("Logout failed", error);
     }
