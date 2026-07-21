@@ -91,5 +91,6 @@ export const colors = {
     in_progress: { bg: palette.gold.bg, text: palette.gold.solid, border: palette.gold.border },
     completed: { bg: palette.green.bg, text: palette.green.solid, border: palette.green.solid },
     cancelled: { bg: palette.red.bg, text: palette.red.solid, border: palette.red.solid },
+    info: { bg: palette.blue.tint, text: palette.blue.primary, border: palette.blue.faint },
   },
 } as const;
