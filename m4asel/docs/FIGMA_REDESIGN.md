@@ -46,7 +46,7 @@ The app already tracks this design closely (blue, RTL, cards), so most work is *
 - [ ] **Orders (طلبات العمل)** — `src/screens/WasherBookings` — `277:4604`
 - [ ] **History (washer / سجل الطلبات)** — `src/screens/History` (washer branch) — `297:2997`
 - [ ] **Washer profile + service/hours modals** — `src/screens/WasherDetails` (+ `components/ServiceFormModal`) — `277:5728` (add-service / edit-hours variants)
-- [ ] **Notifications** — `src/screens/Notifications` — `277:5513`
+- [x] **Notifications** — `src/screens/Notifications` — `277:5513` ✅
 
 ## New screens in the design (not in the app yet — stretch/optional)
 - [ ] **Bookmarks / saved washers** — new `src/screens/Bookmarks` — `257:3349`
@@ -62,3 +62,5 @@ The design uses **"Mayson Arabic Trial"** (a trial font). Options:
 
 ## Progress log
 _(updated as each screen is completed and verified against its Figma frame)_
+
+- **2026-07-21 — Notifications** (`277:5513`): new `NotificationCard` component + `notificationVariants` (type derived client-side from title keywords — API sends no type field); car glyph icons exported from Figma to `assets/images/notifications/`; header count badge; styles fully migrated to theme tokens (added `colors.status.info` blue trio). Bold `(…)` spans in body copy. Count badge shows total (no read/unread field in `NotificationRead`).
