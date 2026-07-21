@@ -1,4 +1,4 @@
-import { Pressable, Text, ActivityIndicator, View } from "react-native";
+import { Pressable, Text, ActivityIndicator } from "react-native";
 import { Icon } from 'react-native-elements';
 import { styles } from "./ConfirmButton.styles";
 
