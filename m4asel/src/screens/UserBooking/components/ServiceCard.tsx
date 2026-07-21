@@ -1,6 +1,7 @@
-import { Pressable, View, Text } from "react-native";
-import { Icon } from 'react-native-elements';
-import type { WashService } from '@/types/api';
+import { Image, Pressable, Text, View } from "react-native";
+import { Icon } from "react-native-elements";
+import { colors } from "@/src/theme";
+import type { WashService } from "@/types/api";
 import { styles } from "./ServiceCard.styles";
 
 interface ServiceCardProps {
@@ -9,42 +10,39 @@ interface ServiceCardProps {
     onSelect: (service: WashService) => void;
 }
 
+/**
+ * Full-width service row card (Figma 276:2214 "Service Card").
+ * Visual order: illustration (left) — text column (right, RTL-aligned).
+ * Selected state: primary tint background + primary border.
+ */
 export default function ServiceCard({ service, isSelected, onSelect }: ServiceCardProps) {
     return (
         <Pressable
             style={[styles.card, isSelected && styles.cardSelected]}
             onPress={() => onSelect(service)}
+            accessibilityState={{ selected: isSelected }}
         >
-            {/* Selected check */}
-            {isSelected && (
-                <View style={styles.checkBadge}>
-                    <Icon name="check" type="material" size={12} color="#fff" />
-                </View>
-            )}
+            <Image source={require("@/assets/images/booking-service.png")} style={styles.illustration} />
 
-            <Icon
-                name="local-car-wash"
-                type="material"
-                size={26}
-                color={isSelected ? '#007AFF' : '#9CA3AF'}
-            />
+            <View style={styles.textCol}>
+                <Text style={styles.name} numberOfLines={1}>{service.name}</Text>
+                <Text style={styles.description} numberOfLines={1}>{service.description}</Text>
 
-            <Text style={[styles.name, isSelected && styles.nameSelected]} numberOfLines={2}>
-                {service.name}
-            </Text>
-
-            {service.description ? (
-                <Text style={styles.desc} numberOfLines={2}>{service.description}</Text>
-            ) : null}
-
-            <View style={styles.chips}>
-                <View style={[styles.chip, styles.chipGreen]}>
-                    <Icon name="payments" type="material" size={12} color="#059669" />
-                    <Text style={[styles.chipText, { color: '#059669' }]}>{service.price} nis</Text>
-                </View>
-                <View style={[styles.chip, styles.chipPurple]}>
-                    <Icon name="timer" type="material" size={12} color="#7C3AED" />
-                    <Text style={[styles.chipText, { color: '#7C3AED' }]}>{service.duration_minutes} د</Text>
+                {/* Bottom row (visual left→right): duration chip — price — select circle */}
+                <View style={styles.bottomRow}>
+                    <View style={styles.durationChip}>
+                        <Icon name="timer" type="material" size={12} color={colors.textTertiary} />
+                        <Text style={styles.durationText}>يحتاج {service.duration_minutes} دقائق</Text>
+                    </View>
+                    <Text style={styles.price}>₪ {service.price}</Text>
+                    <View style={[styles.selectCircle, isSelected && styles.selectCircleSelected]}>
+                        <Icon
+                            name="arrow-forward"
+                            type="material"
+                            size={14}
+                            color={isSelected ? colors.onPrimary : colors.textMuted}
+                        />
+                    </View>
                 </View>
             </View>
         </Pressable>

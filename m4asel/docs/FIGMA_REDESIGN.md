@@ -37,8 +37,8 @@ The app already tracks this design closely (blue, RTL, cards), so most work is *
 ## Customer flow screens
 - [x] **Auth (Login + Sign up)** — `src/screens/Auth` — Figma `244:439` / `244:1149`. **Unified into one screen**: fixed logo + tab bar, and the form body swaps on tab tap via local state (no page navigation). `AuthScreen` + `components/LoginForm` + `components/SignUpForm`; `app/(auth)/{Login,SignUp}.tsx` both render `<AuthScreen initialTab=... />`. *(font: system for now; forgot-password non-functional; login first field kept as email)*
 - [ ] **Map / search** — `src/screens/Map` (+ `components/MapCard`) — `253:2687`
-- [ ] **Booking – Service select** — `src/screens/UserBooking` (`ServiceCards`/`ServiceCard`) — `258:4262`
-- [ ] **Booking – Time & date select** — `src/screens/UserBooking` (`DatePicker`/`TimeSlotGrid`/`ConfirmButton`) — `258:4155`
+- [x] **Booking – Service select** — `src/screens/UserBooking/BookingServiceScreen` — `258:4262` ✅
+- [x] **Booking – Time & date select** — `src/screens/UserBooking/BookingTimeScreen` — `258:4155` ✅
 - [ ] **History (customer)** — `src/screens/History` — `248:362`
 - [ ] **Account settings (customer)** — `src/screens/Profile` — `258:3822`
 
@@ -63,4 +63,5 @@ The design uses **"Mayson Arabic Trial"** (a trial font). Options:
 ## Progress log
 _(updated as each screen is completed and verified against its Figma frame)_
 
+- **2026-07-21 — Booking split** (`258:4262` + `258:4155`): single `UserBookingScreen` split into two routed pages — `BookingServicePage` (washer header + illustrated service cards) and `BookingTimePage` (date chips + slot-derived time wheel + end-time hint). Params flow via query string (`washerId`, `serviceId`); hooks unchanged. Time wheel snaps only to API-available slots. Old `BookingPage`/`ServiceCards`/`TimeSlotGrid`/`DatePicker` deleted; all styles theme-tokenized. Illustration `assets/images/booking-service.png` (rasterized from Figma SVG export — no metro SVG transformer).
 - **2026-07-21 — Notifications** (`277:5513`): new `NotificationCard` component + `notificationVariants` (type derived client-side from title keywords — API sends no type field); car glyph icons exported from Figma to `assets/images/notifications/`; header count badge; styles fully migrated to theme tokens (added `colors.status.info` blue trio). Bold `(…)` spans in body copy. Count badge shows total (no read/unread field in `NotificationRead`).
