@@ -6,6 +6,8 @@ export const endpoints = {
   users: {
     profile: "/users/profile",
     register: "/users/register",
+    update: "/users/profile",
+    changePassword: "/users/change-password",
   },
   bookings: {
     root: "/bookings/",
