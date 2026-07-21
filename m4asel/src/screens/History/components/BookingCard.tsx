@@ -1,35 +1,20 @@
 import { Text, View } from "react-native";
 import { Icon } from 'react-native-elements';
 import { formatDateTime } from '@/src/utils/helpers';
-import type { OrderResponse, OrderStatus } from '@/types/api';
+import type { OrderResponse } from '@/types/api';
 import { styles } from "./BookingCard.styles";
-
-interface StatusConfig {
-    label: string;
-    color: string;
-    badgeIcon: string;
-}
-
-const statusConfig: Record<OrderStatus, StatusConfig> = {
-    pending:     { label: "قيد الانتظار", color: "#E3AE28", badgeIcon: "schedule" },
-    in_progress: { label: "جاري",          color: "#E3AE28", badgeIcon: "autorenew" },
-    completed:   { label: "مكتمل",         color: "#059669", badgeIcon: "check" },
-    cancelled:   { label: "ملغي",          color: "#E62B2E", badgeIcon: "close" },
-};
+import ClientBookingPerson from "./ClientBookingPerson";
+import WasherBookingPerson from "./WasherBookingPerson";
+import { statusConfig } from "../constants";
 
 interface BookingCardProps {
     booking: OrderResponse;
-    /** Washers see the customer who booked them; clients see the washer they booked. */
-    isWasher: boolean;
 }
 
-export default function BookingCard({ booking, isWasher }: BookingCardProps) {
+export default function BookingCard({ booking }: BookingCardProps) {
     const { date, time } = formatDateTime(booking.scheduled_time);
     const status = statusConfig[booking.status] || statusConfig.pending;
 
-    const personName = isWasher ? booking.user_profile?.name : booking.wash_service?.washer_profile?.display_name;
-    const personSubtitle = isWasher ? booking.user_profile?.mobile_number : booking.wash_service?.washer_profile?.address;
-    const personIcon = isWasher ? "person" : "store";
     const serviceName = booking.wash_service?.name;
     const servicePrice = booking.wash_service?.price;
     const serviceDuration = booking.wash_service?.duration_minutes;
@@ -67,15 +52,8 @@ export default function BookingCard({ booking, isWasher }: BookingCardProps) {
 
                 {/* Right column: washer info, service, date/time */}
                 <View style={styles.rightCol}>
-                    <View style={styles.personRow}>
-                        <View style={styles.personInfo}>
-                            <Text style={styles.personName}>{personName || "غير متوفر"}</Text>
-                            {personSubtitle && <Text style={styles.personAddress}>{personSubtitle}</Text>}
-                        </View>
-                        <View style={styles.avatarCircle}>
-                            <Icon name={personIcon} type="material" size={20} color="#2B67E6" />
-                        </View>
-                    </View>
+                    <WasherBookingPerson booking={booking} />
+                    <ClientBookingPerson booking={booking} />
 
                     <View style={styles.detailsCol}>
                         <Text style={[styles.serviceName, { color: status.color }]}>{serviceName || "غير محدد"}</Text>
