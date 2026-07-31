@@ -1,152 +1,114 @@
 import { StyleSheet } from "react-native";
+import { colors, fontSize, fontWeight, radius, spacing } from "@/src/theme";
 import { CARD_WIDTH } from "../constants";
 
 export const styles = StyleSheet.create({
     card: {
         width: CARD_WIDTH,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        padding: 16,
+        backgroundColor: colors.surface,
+        borderRadius: radius.xl,
+        padding: spacing.lg,
         marginHorizontal: 6,
-        shadowColor: '#000',
+        gap: spacing.sm,
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
         shadowRadius: 16,
         elevation: 5,
-        gap: 10,
     },
 
-    // Top
+    // Top row — bookmark (left) + name/subtitle (right)
     topRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    bookmarkBtn: {
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    bookmarkIcon: {
+        width: 26,
+        height: 26,
+    },
+    titleCol: {
+        flex: 1,
+        marginLeft: spacing.sm,
     },
     cardTitle: {
-        fontSize: 17,
-        fontWeight: '800',
-        color: '#111827',
-        flex: 1,
-        textAlign: 'right',
-        marginLeft: 8,
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: colors.text,
+        textAlign: "right",
     },
-    distanceBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#EFF6FF',
-        borderRadius: 10,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        gap: 3,
-        borderWidth: 1,
-        borderColor: '#BFDBFE',
-    },
-    distanceText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#007AFF',
+    subtitle: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.medium,
+        textAlign: "right",
+        marginTop: 2,
     },
 
-    // Address
-    addressRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-    },
-    addressText: {
-        fontSize: 13,
-        color: '#9CA3AF',
-        fontWeight: '500',
-        flex: 1,
-        textAlign: 'right',
-    },
-
-    // Time banner
-    timeBanner: {
-        backgroundColor: '#F0F6FF',
-        borderRadius: 16,
-        padding: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#BFDBFE',
-    },
-    timeIconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 8,
-        shadowColor: '#007AFF',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    timeBlock: {
-        flex: 1,
-        alignItems: 'center',
+    // Rating stars
+    starsRow: {
+        flexDirection: "row",
+        justifyContent: "flex-start",
         gap: 2,
     },
-    timeDivider: {
-        width: 1,
-        height: 32,
-        backgroundColor: '#BFDBFE',
-        marginHorizontal: 8,
-    },
-    timeLabel: {
-        fontSize: 11,
-        color: '#6B7280',
-        fontWeight: '600',
-    },
-    timeValue: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: '#374151',
-    },
-    timeValueAccent: {
-        color: '#007AFF',
-    },
 
-    // Services
-    chipsRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 6,
-        justifyContent: 'flex-end',
+    // Price (left) + distance/arrival (right)
+    infoRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
     },
-    chip: {
-        backgroundColor: '#F3F4F6',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
+    priceBlock: {
+        alignItems: "flex-start",
     },
-    chipText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#374151',
+    priceLabel: {
+        fontSize: fontSize.xs,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.medium,
+    },
+    priceValue: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
+        color: colors.success,
+    },
+    metaCol: {
+        alignItems: "flex-end",
+        gap: spacing.xs,
+    },
+    metaItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.xs,
+    },
+    metaText: {
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.semibold,
+        color: colors.primary,
     },
 
     // Book button
     bookBtn: {
-        backgroundColor: '#007AFF',
-        borderRadius: 14,
-        paddingVertical: 13,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        shadowColor: '#007AFF',
+        backgroundColor: colors.primary,
+        borderRadius: radius.lg,
+        paddingVertical: spacing.md,
+        marginTop: spacing.xs,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: spacing.sm,
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 4,
     },
     bookBtnText: {
-        color: '#FFFFFF',
-        fontSize: 15,
-        fontWeight: '700',
+        color: colors.onPrimary,
+        fontSize: fontSize.base,
+        fontWeight: fontWeight.bold,
     },
 });

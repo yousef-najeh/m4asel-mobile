@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Linking, Pressable, Text, View, type ViewToken } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Linking, Platform, Pressable, Text, View, type ViewToken } from "react-native";
 import { Icon } from "react-native-elements";
 import MapView, { Marker } from "react-native-maps";
 import MapCard from "./components/MapCard";
@@ -17,6 +17,10 @@ const MapPage = () => {
   const [selectedMarker, setSelectedMarker] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
 
+  // Viewability fires whenever the list data changes, not just on user scrolls.
+  // Without this the camera snaps back to a card every time the washers refresh.
+  const isUserScrolling = useRef(false);
+
   const focusOnMarker = (item: Washer) => {
     if (!item || !mapRef.current) return;
     setSelectedMarker(item.id);
@@ -29,6 +33,7 @@ const MapPage = () => {
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    if (!isUserScrolling.current) return;
     if (viewableItems.length > 0 && viewableItems[0].isViewable) {
       const item = viewableItems[0].item;
       focusOnMarker(item);
@@ -91,7 +96,7 @@ const MapPage = () => {
     }
   };
 
-  const fetchWashers = async () => {
+  const fetchWashers = async ({ focusFirstWasher = true } = {}) => {
     try {
       const coords = await getUserLocation();
       if (!coords) return;
@@ -100,7 +105,7 @@ const MapPage = () => {
       const washers = await washersService.nearby(latitude, longitude);
       setLocations(washers);
 
-      if (washers.length > 0 && mapRef.current) {
+      if (focusFirstWasher && washers.length > 0 && mapRef.current) {
         const firstWasher = washers[0];
         setSelectedMarker(firstWasher.id);
         mapRef.current.animateToRegion({
@@ -116,7 +121,7 @@ const MapPage = () => {
   };
 
   useEffect(() => {
-    fetchWashers();
+    fetchWashers({ focusFirstWasher: true });
   }, []);
 
   if (!userLocation && !locating) {
@@ -128,7 +133,7 @@ const MapPage = () => {
           </View>
           <Text style={styles.noLocationTitle}>الموقع غير متاح</Text>
           <Text style={styles.noLocationSubtitle}>يرجى تفعيل خدمة الموقع لعرض المغاسل القريبة</Text>
-          <Pressable style={styles.noLocationBtn} onPress={fetchWashers}>
+          <Pressable style={styles.noLocationBtn} onPress={() => fetchWashers({ focusFirstWasher: true })}>
             <Icon name="my-location" type="material" size={18} color="#FFFFFF" />
             <Text style={styles.noLocationBtnText}>تحديد موقعي</Text>
           </Pressable>
@@ -150,7 +155,7 @@ const MapPage = () => {
         } : undefined}
         showsUserLocation={true}
         showsMyLocationButton={true}
-        mapType="mutedStandard"
+        mapType={Platform.OS === "ios" ? "mutedStandard" : "standard"}
         userInterfaceStyle="light"
       >
         {locations.map((loc) => (
@@ -163,7 +168,7 @@ const MapPage = () => {
         ))}
       </MapView>
 
-      <Pressable style={styles.locationButton} onPress={fetchWashers} disabled={locating}>
+      <Pressable style={styles.locationButton} onPress={() => fetchWashers({ focusFirstWasher: false })} disabled={locating}>
         {locating
           ? <ActivityIndicator size="small" color="#FFFFFF" />
           : <Icon name="my-location" type="material" size={22} color="#FFFFFF" />
@@ -184,6 +189,8 @@ const MapPage = () => {
           snapToAlignment="start"
           decelerationRate="fast"
           showsHorizontalScrollIndicator={false}
+          onScrollBeginDrag={() => { isUserScrolling.current = true; }}
+          onMomentumScrollEnd={() => { isUserScrolling.current = false; }}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
         />

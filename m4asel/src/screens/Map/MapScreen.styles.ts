@@ -94,7 +94,7 @@ export const styles = StyleSheet.create({
   // Cards strip
   cardsContainer: {
     position: 'absolute',
-    bottom: 110,
+    bottom: 120,
     left: 0,
     right: 0,
   },
