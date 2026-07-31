@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Linking, Platform, Pressable, Text, View, type ViewToken } from "react-native";
 import { Icon } from "react-native-elements";
 import MapView, { Marker } from "react-native-maps";
-import MapCard from "./components/MapCard";
+import WasherCard from "@/src/shared/components/WasherCard/WasherCard";
 import { SNAP_INTERVAL } from "./constants";
 import { styles } from "./MapScreen.styles";
 import { washersService } from "@/src/services/washers.service";
@@ -181,7 +181,7 @@ const MapPage = () => {
           data={locations}
           horizontal
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <MapCard item={item} />}
+          renderItem={({ item }) => <WasherCard item={item} style={styles.mapCard} />}
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           pagingEnabled={false}

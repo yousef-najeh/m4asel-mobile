@@ -15,6 +15,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xl,
   },
+  // Vertical-list spacing for the shared WasherCard.
+  listCard: {
+    marginBottom: spacing.lg,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

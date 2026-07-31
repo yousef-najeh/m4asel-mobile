@@ -1,14 +1,12 @@
 import { StyleSheet } from "react-native";
 import { colors, fontSize, fontWeight, radius, spacing } from "@/src/theme";
-import { CARD_WIDTH } from "../constants";
 
 export const styles = StyleSheet.create({
+    // Visual card only — width/margins are supplied per screen via the `style` prop.
     card: {
-        width: CARD_WIDTH,
         backgroundColor: colors.surface,
         borderRadius: radius.xl,
         padding: spacing.lg,
-        marginHorizontal: 6,
         gap: spacing.sm,
         shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
@@ -26,10 +24,6 @@ export const styles = StyleSheet.create({
     bookmarkBtn: {
         justifyContent: "center",
         alignItems: "center",
-    },
-    bookmarkIcon: {
-        width: 26,
-        height: 26,
     },
     titleCol: {
         flex: 1,

@@ -1,17 +1,21 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text, TouchableOpacity, View } from "react-native";
+import { StyleProp, Text, TouchableOpacity, View, ViewStyle } from "react-native";
 import { Icon } from 'react-native-elements';
 import { bookmarksService } from '@/src/services/bookmarks.service';
 import BookmarkIcon from '@/src/shared/components/BookmarkIcon';
 import { colors } from '@/src/theme';
 import { formatDistance, formatTime } from '@/src/utils/helpers';
 import type { Washer } from '@/types/api';
-import { styles } from "./MapCard.styles";
+import { styles } from "./WasherCard.styles";
 
-interface MapCardProps {
+interface WasherCardProps {
     item: Washer;
+    /** Whether this washer is already bookmarked (map: false, bookmarks list: true). */
+    initialSaved?: boolean;
+    /** Per-screen container overrides (width/margins). */
+    style?: StyleProp<ViewStyle>;
 }
 
 // Static placeholders until the API returns these fields.
@@ -21,9 +25,9 @@ const PRICE_MIN = 25;
 const PRICE_MAX = 100;
 const SUBTITLE_FALLBACK = "بجانب الايكون مول";
 
-export default function MapCard({ item }: MapCardProps) {
+export default function WasherCard({ item, initialSaved = false, style }: WasherCardProps) {
     const queryClient = useQueryClient();
-    const [saved, setSaved] = useState(false);
+    const [saved, setSaved] = useState(initialSaved);
     const [saving, setSaving] = useState(false);
 
     const distance = formatDistance(item.distance_km);
@@ -47,7 +51,7 @@ export default function MapCard({ item }: MapCardProps) {
     };
 
     return (
-        <View style={styles.card}>
+        <View style={[styles.card, style]}>
             {/* ── Top: bookmark toggle (left) + name & subtitle (right) ── */}
             <View style={styles.topRow}>
                 <TouchableOpacity
@@ -71,7 +75,7 @@ export default function MapCard({ item }: MapCardProps) {
                         key={i}
                         name={i < RATING ? "star" : "star-border"}
                         type="material"
-                        size={16}
+                        size={22}
                         color={i < RATING ? colors.warning : colors.borderStrong}
                     />
                 ))}

@@ -1,13 +1,13 @@
 import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from "react-native";
 import { Icon } from "react-native-elements";
 import { SafeAreaView } from "react-native-safe-area-context";
+import WasherCard from "@/src/shared/components/WasherCard/WasherCard";
 import { colors } from "@/src/theme";
-import BookmarkCard from "./components/BookmarkCard";
 import { useBookmarks } from "./hooks/useBookmarks";
 import { styles } from "./BookmarksScreen.styles";
 
 export default function BookmarksScreen() {
-  const { data, isLoading, refetch, isRefetching, remove, locationDenied } = useBookmarks();
+  const { data, isLoading, refetch, isRefetching, locationDenied } = useBookmarks();
   const bookmarks = data ?? [];
 
   if (isLoading) {
@@ -60,7 +60,7 @@ export default function BookmarksScreen() {
           </View>
         ) : (
           bookmarks.map((washer) => (
-            <BookmarkCard key={washer.id} item={washer} onRemove={remove} />
+            <WasherCard key={washer.id} item={washer} initialSaved style={styles.listCard} />
           ))
         )}
 

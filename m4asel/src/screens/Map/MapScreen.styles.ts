@@ -1,9 +1,15 @@
 import { StyleSheet } from "react-native";
-import { CARD_MARGIN, CENTER_PADDING } from "./constants";
+import { CARD_MARGIN, CARD_WIDTH, CENTER_PADDING } from "./constants";
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+
+  // Horizontal-strip sizing for the shared WasherCard (snap math lives in constants).
+  mapCard: {
+    width: CARD_WIDTH,
+    marginHorizontal: CARD_MARGIN,
   },
   map: {
     flex: 1,
