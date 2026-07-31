@@ -104,7 +104,7 @@ export default function WasherCard({ item, initialSaved = false, style }: Washer
             {/* ── Book button ── */}
             <TouchableOpacity
                 style={styles.bookBtn}
-                onPress={() => router.push(`/(main)/BookingPage?washerId=${item.id}`)}
+                onPress={() => router.push(`/(main)/BookingServicePage?washerId=${item.id}`)}
                 activeOpacity={0.85}
             >
                 <Icon name="arrow-left" type="font-awesome" size={13} color={colors.onPrimary} />

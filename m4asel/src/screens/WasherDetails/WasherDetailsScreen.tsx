@@ -4,9 +4,11 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "rea
 import { Icon } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ServiceFormModal from "./components/ServiceFormModal";
+import WorkingHoursModal from "./components/WorkingHoursModal";
 import { useAuth } from "@/src/context/AuthContext";
 import { washersService } from "@/src/services/washers.service";
 import { formatTime } from "@/src/utils/helpers";
+import { colors, palette } from "@/src/theme";
 import type { WashService } from '@/types/api';
 import { styles } from "./WasherDetailsScreen.styles";
 
@@ -15,6 +17,13 @@ export default function WasherDetails() {
     const router = useRouter();
     const [modalVisible, setModalVisible] = useState(false);
     const [editingService, setEditingService] = useState<WashService | null>(null);
+    const [hoursModalVisible, setHoursModalVisible] = useState(false);
+    const [hoursField, setHoursField] = useState<'open' | 'close'>('open');
+
+    const openHoursEditor = (field: 'open' | 'close') => {
+        setHoursField(field);
+        setHoursModalVisible(true);
+    };
 
     const openAdd = () => { setEditingService(null); setModalVisible(true); };
     const openEdit = (s: WashService) => { setEditingService(s); setModalVisible(true); };
@@ -44,6 +53,11 @@ export default function WasherDetails() {
                 },
             ]
         );
+    };
+
+    const handleHoursSaved = async () => {
+        setHoursModalVisible(false);
+        await refreshProfile();
     };
 
     if (loading) {
@@ -115,17 +129,35 @@ export default function WasherDetails() {
                 {/* ── Working Hours ── */}
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>ساعات العمل</Text>
+
+                    <View style={styles.hoursEditRow}>
+                        <Pressable
+                            style={[styles.editHint, { borderColor: '#FECACA', backgroundColor: '#FEF2F2' }]}
+                            onPress={() => openHoursEditor('close')}
+                        >
+                            <Icon name="edit" type="material" size={14} color={palette.red.solid} />
+                            <Text style={[styles.editHintText, { color: palette.red.solid }]}>تعديل الإغلاق</Text>
+                        </Pressable>
+                        <Pressable
+                            style={[styles.editHint, { borderColor: colors.primaryFaint, backgroundColor: '#EFF6FF' }]}
+                            onPress={() => openHoursEditor('open')}
+                        >
+                            <Icon name="edit" type="material" size={14} color={colors.primary} />
+                            <Text style={[styles.editHintText, { color: colors.primary }]}>تعديل الفتح</Text>
+                        </Pressable>
+                    </View>
+
                     <View style={styles.hoursRow}>
                         <View style={styles.hourBlock}>
-                            <Icon name="login" type="material" size={18} color="#EF4444" />
+                            <Icon name="login" type="material" size={18} color={palette.red.solid} />
                             <Text style={styles.hourLabel}>الإغلاق</Text>
-                            <Text style={[styles.hourValue, { color: '#EF4444' }]}>{closeTime}</Text>
+                            <Text style={[styles.hourValue, { color: palette.red.solid }]}>{closeTime}</Text>
                         </View>
                         <View style={styles.hoursDivider} />
                         <View style={styles.hourBlock}>
-                            <Icon name="logout" type="material" size={18} color="#007AFF" />
+                            <Icon name="logout" type="material" size={18} color={colors.primary} />
                             <Text style={styles.hourLabel}>الفتح</Text>
-                            <Text style={[styles.hourValue, { color: '#007AFF' }]}>{openTime}</Text>
+                            <Text style={[styles.hourValue, { color: colors.primary }]}>{openTime}</Text>
                         </View>
                     </View>
                 </View>
@@ -195,6 +227,15 @@ export default function WasherDetails() {
                 service={editingService}
                 onClose={closeModal}
                 onSaved={handleSaved}
+            />
+
+            <WorkingHoursModal
+                visible={hoursModalVisible}
+                field={hoursField}
+                openingTime={washerProfile.opening_time}
+                closingTime={washerProfile.closing_time}
+                onClose={() => setHoursModalVisible(false)}
+                onSaved={handleHoursSaved}
             />
         </SafeAreaView>
     );

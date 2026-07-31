@@ -9,7 +9,7 @@ import LoadingState from "@/src/shared/components/LoadingState";
 import BackCircle from "./components/BackCircle";
 import ConfirmButton from "./components/ConfirmButton";
 import DateChips from "./components/DateChips";
-import TimeWheel from "./components/TimeWheel";
+import BookingTimePicker from "./components/BookingTimePicker";
 import { useCreateBooking } from "./hooks/useCreateBooking";
 import { useWasher } from "./hooks/useWasher";
 import { computeEndTime, slotToDate } from "./utils";
@@ -90,7 +90,7 @@ export default function BookingTimeScreen() {
                 </View>
                 <Text style={styles.durationHint}>مدة الخدمة: {service.duration_minutes} دقائق</Text>
 
-                <TimeWheel
+                <BookingTimePicker
                     washerId={washerId}
                     serviceId={service.id!}
                     date={selectedDate}

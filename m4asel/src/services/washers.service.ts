@@ -13,7 +13,6 @@ export const washersService = {
 
   nearby: (lat: number, lng: number) =>
     apiClient.get<NearbyWasherResponse[]>(endpoints.washers.nearby, {
-      authenticated: false,
       query: { lat, lng },
     }),
 
@@ -30,4 +29,10 @@ export const washersService = {
 
   deleteService: (serviceId: string | number) =>
     apiClient.delete<void>(endpoints.washers.service(serviceId)),
+
+  // NOTE: endpoint contract assumed — `/washers/` is token-derived (see endpoints.ts),
+  // like createService. If the backend instead expects these on `/users/profile` or
+  // nested under `washer_profile`, swap the endpoint/payload here.
+  updateHours: (payload: { opening_time: string; closing_time: string }) =>
+    apiClient.put<WasherProfile>(endpoints.washers.root, payload),
 };
