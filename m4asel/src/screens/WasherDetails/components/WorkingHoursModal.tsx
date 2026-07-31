@@ -5,6 +5,7 @@ import HourMinutePicker from '@/src/shared/components/HourMinutePicker';
 import { washersService } from '@/src/services/washers.service';
 import { toHHMM } from '@/src/utils/helpers';
 import { colors, palette } from '@/src/theme';
+import type { WasherProfile } from '@/types/api';
 import { styles } from './WorkingHoursModal.styles';
 
 type HoursField = 'open' | 'close';
@@ -13,10 +14,9 @@ interface WorkingHoursModalProps {
     visible: boolean;
     /** Which wheel to edit in this modal session. */
     field: HoursField;
-    /** Current profile values — the field being edited seeds the wheel; the other
-     *  is sent along unchanged so the backend always gets a valid open/close pair. */
-    openingTime?: string | null;
-    closingTime?: string | null;
+    /** Full current washer profile — the edited field is merged into a copy and
+     *  the whole profile is sent to PUT /washers/profile. */
+    profile: WasherProfile;
     onClose: () => void;
     onSaved: () => void;
 }
@@ -37,8 +37,7 @@ const FIELD_THEME = {
 export default function WorkingHoursModal({
     visible,
     field,
-    openingTime,
-    closingTime,
+    profile,
     onClose,
     onSaved,
 }: WorkingHoursModalProps) {
@@ -46,7 +45,7 @@ export default function WorkingHoursModal({
     const [saving, setSaving] = useState(false);
 
     const theme = FIELD_THEME[field];
-    const initialValue = toHHMM(field === 'open' ? openingTime : closingTime);
+    const initialValue = toHHMM(field === 'open' ? profile.opening_time : profile.closing_time);
 
     // Seed the picker from the profile every time the sheet opens.
     useEffect(() => {
@@ -59,10 +58,14 @@ export default function WorkingHoursModal({
         if (!time) return;
         setSaving(true);
         try {
-            const payload = field === 'open'
-                ? { opening_time: time, closing_time: toHHMM(closingTime) ?? time }
-                : { opening_time: toHHMM(openingTime) ?? time, closing_time: time };
-            await washersService.updateHours(payload);
+            // Merge the edited hour into a copy of the whole profile and send it
+            // all to PUT /washers/profile. Both time fields are normalized to "HH:MM".
+            const updated: WasherProfile = {
+                ...profile,
+                opening_time: field === 'open' ? time : (toHHMM(profile.opening_time) ?? '00:00'),
+                closing_time: field === 'close' ? time : (toHHMM(profile.closing_time) ?? '00:00'),
+            };
+            await washersService.updateProfile(updated);
             onSaved();
         } catch {
             Alert.alert('خطأ', 'فشل حفظ ساعات العمل، حاول مجدداً');

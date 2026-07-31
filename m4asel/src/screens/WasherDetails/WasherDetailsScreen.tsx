@@ -232,8 +232,7 @@ export default function WasherDetails() {
             <WorkingHoursModal
                 visible={hoursModalVisible}
                 field={hoursField}
-                openingTime={washerProfile.opening_time}
-                closingTime={washerProfile.closing_time}
+                profile={washerProfile}
                 onClose={() => setHoursModalVisible(false)}
                 onSaved={handleHoursSaved}
             />

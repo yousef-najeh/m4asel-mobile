@@ -30,9 +30,9 @@ export const washersService = {
   deleteService: (serviceId: string | number) =>
     apiClient.delete<void>(endpoints.washers.service(serviceId)),
 
-  // NOTE: endpoint contract assumed — `/washers/` is token-derived (see endpoints.ts),
-  // like createService. If the backend instead expects these on `/users/profile` or
-  // nested under `washer_profile`, swap the endpoint/payload here.
-  updateHours: (payload: { opening_time: string; closing_time: string }) =>
-    apiClient.put<WasherProfile>(endpoints.washers.root, payload),
+  // Update the signed-in washer's whole profile (PUT /washers/profile). The
+  // washer is derived from the auth token — no id in the path. Send the full
+  // profile object with the changed fields merged in.
+  updateProfile: (payload: WasherProfile) =>
+    apiClient.put<WasherProfile>(endpoints.washers.profile, payload),
 };
