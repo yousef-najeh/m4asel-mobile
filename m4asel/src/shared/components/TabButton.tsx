@@ -29,10 +29,13 @@ export default function TabButton({ route, currentRoute, iconName, iconType = "m
           size={24}
           color={isActive ? "#FFFFFF" : "#6B7280"}
         />
-        <Text style={[
-          styles.tabText,
-          isActive && styles.activeText
-        ]}>
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.tabText,
+            isActive && styles.activeText
+          ]}
+        >
           {label}
         </Text>
       </View>
@@ -51,9 +54,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     borderRadius: 16,
-    minWidth: 70,
     gap: 4,
   },
 

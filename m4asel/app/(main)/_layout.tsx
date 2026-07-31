@@ -11,6 +11,7 @@ const allTabs = [
   { route: "/(main)/ProfilePage", iconName: "person", label: "حسابك", showFor: "all" },
   { route: "/(main)/Notifications", iconName: "notifications", label: "الإشعارات", showFor: "all" },
   { route: "/(main)/MapPage", iconName: "map", label: "الخريطة", showFor: "regularUser" },
+  { route: "/(main)/Bookmarks", iconName: "bookmark", label: "المحفوظات", showFor: "regularUser" },
   { route: "/(main)/Bookings", iconName: "handyman", label: "الطلبات", showFor: "washer" },
   { route: "/(main)/History", iconName: "history", label: "حجوزاتي", showFor: "regularUser" },
   { route: "/(main)/History", iconName: "history", label: "السجل", showFor: "washer" },
@@ -56,6 +57,7 @@ export default function MainLayout() {
         }}
       >
         <Tabs.Screen name="Bookings" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="Bookmarks" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="History" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="MapPage" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="Notifications" options={{ tabBarButton: () => null }} />
