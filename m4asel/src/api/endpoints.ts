@@ -26,4 +26,8 @@ export const endpoints = {
   notifications: {
     root: "/notifications/",
   },
+  bookmarks: {
+    root: "/bookmarks/",
+    byWasherId: (washerId: number | string) => `/bookmarks/${washerId}`,
+  },
 } as const;
