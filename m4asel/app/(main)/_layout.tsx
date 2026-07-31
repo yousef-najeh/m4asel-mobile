@@ -1,6 +1,6 @@
 // app/(main)/_layout.jsx   ← save exactly this
 
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { View, StyleSheet } from "react-native";
 import { useAuth } from "@/src/context/AuthContext";
@@ -11,6 +11,7 @@ const allTabs = [
   { route: "/(main)/ProfilePage", iconName: "person", label: "حسابك", showFor: "all" },
   { route: "/(main)/Notifications", iconName: "notifications", label: "الإشعارات", showFor: "all" },
   { route: "/(main)/MapPage", iconName: "map", label: "الخريطة", showFor: "regularUser" },
+  { route: "/(main)/Bookmarks", iconName: "bookmark", label: "المحفوظات", showFor: "regularUser" },
   { route: "/(main)/Bookings", iconName: "handyman", label: "الطلبات", showFor: "washer" },
   { route: "/(main)/History", iconName: "history", label: "حجوزاتي", showFor: "regularUser" },
   { route: "/(main)/History", iconName: "history", label: "السجل", showFor: "washer" },
@@ -18,7 +19,12 @@ const allTabs = [
 
 export default function MainLayout() {
   const { role } = useAuth();
+  const pathname = usePathname();
   const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
+
+  // A tab route is a single segment (e.g. "/ProfilePage"); anything deeper is a
+  // page pushed inside a tab's stack, which should cover the tab bar.
+  const isNestedPage = pathname.split("/").filter(Boolean).length > 1;
   
   const tabs = allTabs.filter(tab => 
     tab.showFor === "all" || 
@@ -36,7 +42,7 @@ export default function MainLayout() {
           const currentRoute = state.routes[state.index].name;
 
           const hiddenScreens = ['WasherDetails', 'BookingServicePage', 'BookingTimePage'];
-          if (hiddenScreens.includes(currentRoute)) return null;
+          if (isNestedPage || hiddenScreens.includes(currentRoute)) return null;
 
           return (
             <View style={styles.container}>
@@ -56,6 +62,7 @@ export default function MainLayout() {
         }}
       >
         <Tabs.Screen name="Bookings" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="Bookmarks" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="History" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="MapPage" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="Notifications" options={{ tabBarButton: () => null }} />

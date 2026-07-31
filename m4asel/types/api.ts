@@ -100,6 +100,11 @@ export interface NotificationRead {
   created_at: string | null;
 }
 
+// --- Bookmarks ---
+export interface BookmarkCreate {
+  washer_id: number;
+}
+
 // --- Request bodies ---
 export interface BookingCreate {
   washer_id: number;
