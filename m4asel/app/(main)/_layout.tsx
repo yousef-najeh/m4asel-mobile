@@ -41,7 +41,7 @@ export default function MainLayout() {
         tabBar={({ state }) => {
           const currentRoute = state.routes[state.index].name;
 
-          const hiddenScreens = ['WasherDetails', 'BookingPage'];
+          const hiddenScreens = ['WasherDetails', 'BookingServicePage', 'BookingTimePage'];
           if (isNestedPage || hiddenScreens.includes(currentRoute)) return null;
 
           return (
@@ -68,6 +68,8 @@ export default function MainLayout() {
         <Tabs.Screen name="Notifications" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="ProfilePage" options={{ tabBarButton: () => null }} />
         <Tabs.Screen name="WasherDetails" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="BookingServicePage" options={{ tabBarButton: () => null }} />
+        <Tabs.Screen name="BookingTimePage" options={{ tabBarButton: () => null }} />
       </Tabs>
     </>
   );
