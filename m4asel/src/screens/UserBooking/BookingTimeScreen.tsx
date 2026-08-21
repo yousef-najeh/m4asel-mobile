@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { Icon } from "react-native-elements";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/src/theme";
@@ -9,7 +9,7 @@ import LoadingState from "@/src/shared/components/LoadingState";
 import BackCircle from "./components/BackCircle";
 import ConfirmButton from "./components/ConfirmButton";
 import DateChips from "./components/DateChips";
-import TimeWheel from "./components/TimeWheel";
+import BookingTimePicker from "./components/BookingTimePicker";
 import { useCreateBooking } from "./hooks/useCreateBooking";
 import { useWasher } from "./hooks/useWasher";
 import { computeEndTime, slotToDate } from "./utils";
@@ -65,11 +65,7 @@ export default function BookingTimeScreen() {
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView
-                style={styles.scroll}
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
+            <View style={[styles.scroll, styles.content]}>
                 {/* Header: back circle (visual left) — page title (visual right) */}
                 <View style={styles.headerRow}>
                     <BackCircle onPress={() => router.replace(`/(main)/BookingServicePage?washerId=${washerId}`)} />
@@ -90,7 +86,7 @@ export default function BookingTimeScreen() {
                 </View>
                 <Text style={styles.durationHint}>مدة الخدمة: {service.duration_minutes} دقائق</Text>
 
-                <TimeWheel
+                <BookingTimePicker
                     washerId={washerId}
                     serviceId={service.id!}
                     date={selectedDate}
@@ -103,7 +99,7 @@ export default function BookingTimeScreen() {
                         ينتهي الحجز تقريبا: {computeEndTime(selectedDate, selectedTime, service.duration_minutes)}
                     </Text>
                 )}
-            </ScrollView>
+            </View>
 
             <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
                 <ConfirmButton

@@ -13,7 +13,6 @@ export const washersService = {
 
   nearby: (lat: number, lng: number) =>
     apiClient.get<NearbyWasherResponse[]>(endpoints.washers.nearby, {
-      authenticated: false,
       query: { lat, lng },
     }),
 
@@ -30,4 +29,10 @@ export const washersService = {
 
   deleteService: (serviceId: string | number) =>
     apiClient.delete<void>(endpoints.washers.service(serviceId)),
+
+  // Update the signed-in washer's whole profile (PUT /washers/profile). The
+  // washer is derived from the auth token — no id in the path. Send the full
+  // profile object with the changed fields merged in.
+  updateProfile: (payload: WasherProfile) =>
+    apiClient.put<WasherProfile>(endpoints.washers.profile, payload),
 };

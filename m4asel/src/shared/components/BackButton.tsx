@@ -1,35 +1,29 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet } from "react-native";
-import { Icon } from "react-native-elements";
-import { colors } from "@/src/theme";
+import { PressableProps } from "react-native";
+import BackIcon from "@/src/shared/components/BackIcon";
 
-/** Filled blue circular back button used in stack headers. */
-export default function BackButton() {
+/**
+ * Shared navbar back button — the single place that owns the app-wide default
+ * size (48) and back-navigation behavior. Wraps {@link BackIcon}.
+ *
+ * Use this instead of `BackIcon` directly in screen headers so the icon size,
+ * color, and direction stay consistent everywhere. Override `onPress` for the
+ * rare screen that needs a custom destination (e.g. replace instead of back).
+ */
+export interface BackButtonProps {
+  /** Icon edge length in px (default 48). */
+  size?: number;
+  /** Defaults to `router.back()`. Override for a custom destination. */
+  onPress?: PressableProps["onPress"];
+}
+
+export default function BackButton({ size = 48, onPress }: BackButtonProps) {
   const router = useRouter();
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.btn, pressed && styles.pressed]}
-      onPress={() => router.back()}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel="رجوع"
-    >
-      <Icon name="arrow-back" type="material" size={22} color={colors.white} />
-    </Pressable>
+    <BackIcon
+      size={size}
+      onPress={onPress ?? (() => router.back())}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  btn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-});

@@ -40,3 +40,39 @@ export const formatDistance = (km?: number | null): string | null => {
     if (km == null) return null;
     return km < 1 ? `${(km * 1000).toFixed(0)} م` : `${km.toFixed(1)} كم`;
 };
+
+/** Normalize a stored time (full ISO datetime or "HH:MM[:SS]") to a bare "HH:MM"
+ *  so it matches an option from `generateHourlySlots`. Returns null when unset. */
+export const toHHMM = (input?: string | null): string | null => {
+    if (!input) return null;
+    try {
+        let h: number, m: number;
+        if (input.includes('T')) {
+            const d = new Date(input);
+            h = d.getHours();
+            m = d.getMinutes();
+        } else {
+            const parts = input.replace('Z', '').split(':');
+            h = parseInt(parts[0], 10);
+            m = parseInt(parts[1], 10);
+        }
+        if (Number.isNaN(h) || Number.isNaN(m)) return null;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    } catch {
+        return null;
+    }
+};
+
+/** 24 hourly slot options: "00:00", "01:00", … "23:00". */
+export const generateHourlySlots = (): string[] => generateTimeSlots(60);
+
+/** Time options across a full day at `stepMinutes` granularity, e.g. step 10 →
+ *  "00:00","00:10",…,"23:50". Used by the working-hours wheel so minutes scroll
+ *  in 10-minute increments. */
+export const generateTimeSlots = (stepMinutes: number): string[] => {
+    const total = Math.floor((24 * 60) / stepMinutes);
+    return Array.from({ length: total }, (_, i) => {
+        const m = i * stepMinutes;
+        return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    });
+};

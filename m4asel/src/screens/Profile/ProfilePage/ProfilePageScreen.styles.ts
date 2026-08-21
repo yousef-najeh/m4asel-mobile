@@ -172,7 +172,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radius["2xl"],
-    padding: spacing.lg,
+    padding: spacing["2xl"],
     marginBottom: spacing["2xl"],
     borderWidth: 1,
     borderColor: colors.border,
@@ -193,7 +193,7 @@ export const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   washerBannerTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: colors.text,
   },

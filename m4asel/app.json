@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.lam3y.m4asel",
       "supportsTablet": true,
       "infoPlist": {
         "ExpoLocalization_supportsRTL": true

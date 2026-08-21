@@ -15,6 +15,7 @@ export const endpoints = {
   },
   washers: {
     root: "/washers/",
+    profile: "/washers/profile",
     nearby: "/washers",
     byId: (id: number | string) => `/washers/${id}`,
     // The washer is derived from the auth token — no washer id in the path.

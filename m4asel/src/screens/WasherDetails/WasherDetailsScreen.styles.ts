@@ -73,7 +73,11 @@ export const styles = StyleSheet.create({
     rowLabel: { fontSize: 14, color: '#374151', fontWeight: '600' },
     rowValue: { fontSize: 14, color: '#6B7280', fontWeight: '500', flex: 1, textAlign: 'left' },
 
-    // Hours
+    // Hours (summary card — edit buttons on top, open/close display below)
+    hoursEditRow: {
+        flexDirection: 'row', gap: 10,
+        marginTop: 4, marginBottom: 8,
+    },
     hoursRow: {
         flexDirection: 'row', alignItems: 'center',
         backgroundColor: '#F9FAFB', borderRadius: 14,
@@ -83,6 +87,14 @@ export const styles = StyleSheet.create({
     hoursDivider: { width: 1, height: 44, backgroundColor: '#E5E7EB', marginHorizontal: 8 },
     hourLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
     hourValue: { fontSize: 17, fontWeight: '800' },
+    editHint: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 4, flex: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10, paddingVertical: 6,
+        borderWidth: 1,
+    },
+    editHintText: { fontSize: 13, fontWeight: '700' },
 
     // Services
     noServices: { alignItems: 'center', paddingVertical: 20, gap: 8 },
