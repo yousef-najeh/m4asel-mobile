@@ -10,9 +10,9 @@ import AuthActions from './AuthActions';
 import AuthErrorBox from './AuthErrorBox';
 
 const schema = Yup.object().shape({
-    email: Yup.string()
-        .email('البريد الإلكتروني غير صالح')
-        .required('البريد الإلكتروني مطلوب'),
+    phone: Yup.string()
+        .matches(/^\+?[0-9]{9,15}$/, 'رقم الجوال غير صالح')
+        .required('رقم الجوال مطلوب'),
     password: Yup.string()
         .min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل')
         .required('كلمة المرور مطلوبة'),
@@ -25,7 +25,7 @@ export default function LoginForm() {
     const handleLogin = async (values: LoginValues, { setSubmitting }: FormikHelpers<LoginValues>) => {
         setAuthError('');
         try {
-            await authService.signIn(values.email, values.password);
+            await authService.signIn(values.phone, values.password);
         } catch (error) {
             const message = error instanceof Error ? error.message : '';
             setAuthError(authErrorMessages[message] ?? 'حدث خطأ، حاول مجدداً');
@@ -49,7 +49,7 @@ export default function LoginForm() {
 
     return (
         <Formik<LoginValues>
-            initialValues={{ email: '', password: '' }}
+            initialValues={{ phone: '', password: '' }}
             validationSchema={schema}
             onSubmit={handleLogin}
         >

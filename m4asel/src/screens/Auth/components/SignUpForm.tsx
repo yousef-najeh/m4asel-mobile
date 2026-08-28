@@ -13,11 +13,8 @@ const schema = Yup.object().shape({
     name: Yup.string()
         .min(2, 'الاسم يجب أن يكون حرفين على الأقل')
         .required('الاسم مطلوب'),
-    email: Yup.string()
-        .email('البريد الإلكتروني غير صالح')
-        .required('البريد الإلكتروني مطلوب'),
-    mobile_number: Yup.string()
-        .matches(/^[0-9+]{9,15}$/, 'رقم الجوال غير صالح')
+    phone: Yup.string()
+        .matches(/^\+?[0-9]{9,15}$/, 'رقم الجوال غير صالح')
         .required('رقم الجوال مطلوب'),
     password: Yup.string()
         .min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل')
@@ -55,7 +52,7 @@ export default function SignUpForm() {
 
     return (
         <Formik<SignUpValues>
-            initialValues={{ name: '', email: '', mobile_number: '', password: '' }}
+            initialValues={{ name: '', phone: '', password: '' }}
             validationSchema={schema}
             onSubmit={handleSignUp}
         >

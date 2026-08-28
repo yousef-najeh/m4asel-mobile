@@ -5,6 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import { apiClient } from "@/src/api/client";
 import { endpoints } from "@/src/api/endpoints";
 import { supabase } from "@/src/config/supabase";
+import { normalizePhone } from "@/src/utils/helpers";
 
 // Lets the in-app browser sheet used for Google sign-in close itself once the
 // OAuth redirect lands, instead of leaving a dangling browser tab open.
@@ -12,16 +13,15 @@ WebBrowser.maybeCompleteAuthSession();
 
 export interface RegisterPayload {
   name: string;
-  email: string;
-  mobile_number: string;
+  phone: string;
   password: string;
 }
 
 /** Arabic copy for the Supabase auth error messages surfaced on the login screen. */
 export const authErrorMessages: Record<string, string> = {
-  "Invalid login credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-  "User already registered": "هذا البريد الإلكتروني مستخدم بالفعل",
-  "Email not confirmed": "يرجى تأكيد البريد الإلكتروني أولاً",
+  "Invalid login credentials": "رقم الجوال أو كلمة المرور غير صحيحة",
+  "User already registered": "رقم الجوال هذا مستخدم بالفعل",
+  "Phone not confirmed": "يرجى تأكيد رقم الجوال أولاً",
   "Password should be at least 6 characters": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
 };
 
@@ -71,8 +71,8 @@ export function registerAuthDeepLinkListener(): () => void {
 }
 
 export const authService = {
-  async signIn(email: string, password: string): Promise<void> {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  async signIn(phone: string, password: string): Promise<void> {
+    const { error } = await supabase.auth.signInWithPassword({ phone: normalizePhone(phone), password });
     if (error) throw error;
   },
 
@@ -96,15 +96,16 @@ export const authService = {
 
   /**
    * The backend creates the account (both the Profile row and the Supabase
-   * auth user, via the Admin API — email pre-confirmed, mirroring the old
+   * auth user, via the Admin API — phone pre-confirmed, mirroring the old
    * Firebase behavior) — see docs/supabase-auth-migration.md. The client
    * just signs in afterward.
    */
   async register(payload: RegisterPayload): Promise<void> {
-    await apiClient.post(endpoints.users.register, payload, { authenticated: false });
+    const normalized = { ...payload, phone: normalizePhone(payload.phone) };
+    await apiClient.post(endpoints.users.register, normalized, { authenticated: false });
     const { error } = await supabase.auth.signInWithPassword({
-      email: payload.email,
-      password: payload.password,
+      phone: normalized.phone,
+      password: normalized.password,
     });
     if (error) throw error;
   },

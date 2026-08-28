@@ -76,3 +76,15 @@ export const generateTimeSlots = (stepMinutes: number): string[] => {
         return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
     });
 };
+
+/** Strip spaces, dashes, and parentheses, then prepend "+" if missing.
+ *  Supabase auth requires E.164 (`+` followed by 9-15 digits), so the field
+ *  component lets users type "5XXXXXXXX" or "0501234567" and we normalize
+ *  before sending it to the API / Supabase. */
+export const normalizePhone = (raw: string, defaultCountryCode: string = '+966'): string => {
+    const cleaned = raw.replace(/[\s\-()]/g, '');
+    if (cleaned.startsWith('+')) return cleaned;
+    if (cleaned.startsWith('00')) return `+${cleaned.slice(2)}`;
+    if (cleaned.startsWith('0')) return `${defaultCountryCode}${cleaned.slice(1)}`;
+    return `${defaultCountryCode}${cleaned}`;
+};
