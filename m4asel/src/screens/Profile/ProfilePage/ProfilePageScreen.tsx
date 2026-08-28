@@ -6,6 +6,7 @@ import { UserRole } from "@/src/constants/UserRole";
 import { authService } from "@/src/services/auth.service";
 import { useAuth } from "@/src/context/AuthContext";
 import { colors } from "@/src/theme";
+import { getUserDisplayName } from "@/src/utils/supabaseUser";
 import { styles } from "./ProfilePageScreen.styles";
 
 const ProfilePage = () => {
@@ -31,7 +32,7 @@ const ProfilePage = () => {
   }
 
   const isWasher = role === UserRole.WASHER_OWNER || role === UserRole.WASHER_WORKER;
-  const userName = profile?.name || user?.displayName || "مستخدم";
+  const userName = profile?.name || (user && getUserDisplayName(user)) || "مستخدم";
 
   const roleLabels: Record<UserRole, string> = {
     [UserRole.ADMIN]: "مدير النظام",

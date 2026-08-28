@@ -1,4 +1,4 @@
-import { onAuthStateChanged, type User } from "firebase/auth";
+import type { User } from "@supabase/supabase-js";
 import {
   createContext,
   useContext,
@@ -8,7 +8,10 @@ import {
 } from "react";
 import { apiClient } from "@/src/api/client";
 import { endpoints } from "@/src/api/endpoints";
-import { auth } from "@/src/config/firebase";
+import { env } from "@/src/config/env";
+import { supabase } from "@/src/config/supabase";
+import { registerAuthDeepLinkListener } from "@/src/services/auth.service";
+import { buildMockProfile } from "@/src/services/mockProfile";
 import type { AuthContextType, UserProfileRead } from "@/types/api";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,7 +24,7 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-//unify data fetching by somthing like react quere or if not found a custom made one 
+//unify data fetching by somthing like react quere or if not found a custom made one
 //
 export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
@@ -29,26 +32,35 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch the backend profile for the signed-in Firebase user (token added by apiClient).
-  const fetchProfile = async (): Promise<void> => {
+  // Fetch the backend profile for the signed-in Supabase user (token added by apiClient).
+  const fetchProfile = async (sessionUser: User): Promise<void> => {
     try {
       const profileData = await apiClient.get<UserProfileRead>(endpoints.users.profile);
       setProfile(Object.freeze(profileData));
       setError(null);
     } catch (err) {
       console.error("Error fetching profile:", err);
+      if (env.useMockProfile) {
+        // Backend doesn't verify Supabase tokens yet — stand in a dev-only
+        // profile so the rest of the app is still usable. See mockProfile.ts.
+        setProfile(Object.freeze(buildMockProfile(sessionUser)));
+        setError(null);
+        return;
+      }
       setError(err instanceof Error ? err.message : "Failed to fetch profile");
       setProfile(null);
     }
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
-      setUser(firebaseUser);
+    const removeDeepLinkListener = registerAuthDeepLinkListener();
 
-      if (firebaseUser) {
-        await fetchProfile();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setLoading(true);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await fetchProfile(session.user);
       } else {
         setProfile(null);
         setError(null);
@@ -57,13 +69,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      removeDeepLinkListener();
+    };
   }, []);
 
   const refreshProfile = async (): Promise<void> => {
-    if (auth.currentUser) {
+    if (user) {
       setLoading(true);
-      await fetchProfile();
+      await fetchProfile(user);
       setLoading(false);
     }
   };

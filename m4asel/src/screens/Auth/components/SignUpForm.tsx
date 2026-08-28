@@ -2,7 +2,7 @@ import { Formik, type FormikHelpers } from 'formik';
 import { useState } from 'react';
 import { View } from 'react-native';
 import * as Yup from 'yup';
-import { authService } from '@/src/services/auth.service';
+import { authErrorMessages, authService } from '@/src/services/auth.service';
 import { FIELD_COMPONENTS } from '@/src/shared/components/fields/registry';
 import { SIGNUP_FIELDS, type SignUpValues } from '../constants/authFields';
 import { styles } from '../AuthScreen.styles';
@@ -26,15 +26,30 @@ const schema = Yup.object().shape({
 
 export default function SignUpForm() {
     const [serverError, setServerError] = useState('');
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const handleSignUp = async (values: SignUpValues, { setSubmitting }: FormikHelpers<SignUpValues>) => {
         setServerError('');
         try {
             await authService.register(values);
         } catch (error) {
-            setServerError(error instanceof Error ? error.message : 'حدث خطأ في الاتصال، حاول مجدداً');
+            const message = error instanceof Error ? error.message : '';
+            setServerError(authErrorMessages[message] ?? 'حدث خطأ في الاتصال، حاول مجدداً');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setServerError('');
+        setGoogleLoading(true);
+        try {
+            await authService.signInWithGoogle();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : '';
+            setServerError(authErrorMessages[message] ?? 'تعذر تسجيل الدخول عبر Google، حاول مجدداً');
+        } finally {
+            setGoogleLoading(false);
         }
     };
 
@@ -68,6 +83,8 @@ export default function SignUpForm() {
                         submitLabel="إنشاء الحساب"
                         onSubmit={() => handleSubmit()}
                         isSubmitting={isSubmitting}
+                        onGooglePress={handleGoogleSignIn}
+                        googleLoading={googleLoading}
                     />
                 </View>
             )}

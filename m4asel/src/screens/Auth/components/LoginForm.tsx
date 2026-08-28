@@ -1,4 +1,3 @@
-import { FirebaseError } from 'firebase/app';
 import { Formik, type FormikHelpers } from 'formik';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -20,17 +19,31 @@ const schema = Yup.object().shape({
 });
 
 export default function LoginForm() {
-    const [firebaseError, setFirebaseError] = useState('');
+    const [authError, setAuthError] = useState('');
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const handleLogin = async (values: LoginValues, { setSubmitting }: FormikHelpers<LoginValues>) => {
-        setFirebaseError('');
+        setAuthError('');
         try {
             await authService.signIn(values.email, values.password);
         } catch (error) {
-            const code = error instanceof FirebaseError ? error.code : undefined;
-            setFirebaseError((code && authErrorMessages[code]) || 'حدث خطأ، حاول مجدداً');
+            const message = error instanceof Error ? error.message : '';
+            setAuthError(authErrorMessages[message] ?? 'حدث خطأ، حاول مجدداً');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setAuthError('');
+        setGoogleLoading(true);
+        try {
+            await authService.signInWithGoogle();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : '';
+            setAuthError(authErrorMessages[message] ?? 'تعذر تسجيل الدخول عبر Google، حاول مجدداً');
+        } finally {
+            setGoogleLoading(false);
         }
     };
 
@@ -59,13 +72,15 @@ export default function LoginForm() {
 
                         <Text style={styles.forgot}>نسيت كلمة السر؟</Text>
 
-                        <AuthErrorBox message={firebaseError} />
+                        <AuthErrorBox message={authError} />
                     </View>
 
                     <AuthActions
                         submitLabel="تسجيل الدخول"
                         onSubmit={() => handleSubmit()}
                         isSubmitting={isSubmitting}
+                        onGooglePress={handleGoogleSignIn}
+                        googleLoading={googleLoading}
                     />
                 </View>
             )}

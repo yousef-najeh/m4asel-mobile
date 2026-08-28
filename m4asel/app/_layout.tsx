@@ -1,3 +1,6 @@
+// Must run before any module touches @supabase/supabase-js.
+import "@/src/config/polyfills";
+
 import { Slot } from "expo-router";
 import { I18nManager, LogBox } from "react-native";
 import { AppProviders } from "@/src/providers";

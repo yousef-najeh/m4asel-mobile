@@ -6,10 +6,15 @@ interface AuthActionsProps {
     submitLabel: string;
     onSubmit: () => void;
     isSubmitting: boolean;
+    /** Wires up the Google button. Left undefined, the button stays inert (matches Apple/Facebook, not implemented yet). */
+    onGooglePress?: () => void;
+    googleLoading?: boolean;
 }
 
 /** Submit button + "or via" divider + social-login row, shared by both auth forms. */
-export default function AuthActions({ submitLabel, onSubmit, isSubmitting }: AuthActionsProps) {
+export default function AuthActions({
+    submitLabel, onSubmit, isSubmitting, onGooglePress, googleLoading,
+}: AuthActionsProps) {
     return (
         <View style={styles.actions}>
             <Pressable
@@ -40,8 +45,17 @@ export default function AuthActions({ submitLabel, onSubmit, isSubmitting }: Aut
                 <Pressable style={styles.socialBtn} accessibilityRole="button" accessibilityLabel="التسجيل عبر Facebook">
                     <Image source={require('@/assets/images/facebook-logo-2.png')} style={styles.socialIcon} />
                 </Pressable>
-                <Pressable style={styles.socialBtn} accessibilityRole="button" accessibilityLabel="التسجيل عبر Google">
-                    <Image source={require('@/assets/images/google-logo.png')} style={styles.socialIcon} />
+                <Pressable
+                    style={styles.socialBtn}
+                    onPress={onGooglePress}
+                    disabled={!onGooglePress || googleLoading}
+                    accessibilityRole="button"
+                    accessibilityLabel="التسجيل عبر Google"
+                    accessibilityState={{ disabled: !onGooglePress || googleLoading, busy: googleLoading }}
+                >
+                    {googleLoading
+                        ? <ActivityIndicator color={colors.primary} />
+                        : <Image source={require('@/assets/images/google-logo.png')} style={styles.socialIcon} />}
                 </Pressable>
             </View>
         </View>

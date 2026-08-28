@@ -2,7 +2,7 @@
 // Types mirror the backend schemas 1:1 — see github.com/yousef-najeh/m4asel
 // (schemas.py / models.py / constants.py). Keep in sync when the API changes.
 
-import type { User as FirebaseUser } from 'firebase/auth';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { UserRole } from '@/src/constants/UserRole';
 
 // --- Enums (constants.py) ---
@@ -152,7 +152,7 @@ export type BookingStatus = OrderStatus;
 
 // --- Auth context ---
 export interface AuthContextType {
-  user: FirebaseUser | null;
+  user: SupabaseUser | null;
   profile: UserProfileRead | null;
   loading: boolean;
   error: string | null;

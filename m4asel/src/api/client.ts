@@ -1,5 +1,5 @@
 import { env } from "@/src/config/env";
-import { auth } from "@/src/config/firebase";
+import { supabase } from "@/src/config/supabase";
 
 /**
  * The single HTTP client for the app. Every feature service calls this instead
@@ -9,14 +9,14 @@ import { auth } from "@/src/config/firebase";
  *   apiClient.post<T>(path, body?, options?)   // put / patch likewise
  *   apiClient.delete<T>(path, options?)
  *
- * Auth token is attached automatically from the current Firebase user. Pass
+ * Auth token is attached automatically from the current Supabase session. Pass
  * `{ authenticated: false }` for public endpoints (e.g. nearby washers).
  */
 
 export type QueryParams = Record<string, string | number | boolean | undefined | null>;
 
 export interface RequestOptions {
-  /** Attach the Firebase ID token as a Bearer header. Default: true. */
+  /** Attach the Supabase access token as a Bearer header. Default: true. */
   authenticated?: boolean;
   /** Query-string params appended to the path (null/undefined dropped). */
   query?: QueryParams;
@@ -51,10 +51,11 @@ function buildUrl(path: string, query?: QueryParams): string {
 }
 
 async function authHeader(): Promise<Record<string, string>> {
-  const user = auth.currentUser;
-  if (!user) return {};
-  const token = await user.getIdToken();
-  return { Authorization: `Bearer ${token}` };
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return {};
+  return { Authorization: `Bearer ${session.access_token}` };
 }
 
 /** Normalize a failed response into an ApiError, decoding FastAPI's `{ detail }`. */
